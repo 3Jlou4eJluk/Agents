@@ -1,0 +1,112 @@
+[
+  {
+    "email": "asamran@eastnets.com",
+    "name": "Anas Samran",
+    "company": "Eastnets",
+    "job_title": "Technical Support Manager",
+    "linkedin_url": "linkedin.com/in/anas-samran-97b23016",
+    "is_relevant": true,
+    "classification_reason": "Technical Support Manager at Eastnets with 15+ years in technical support leadership roles at major tech companies (Microsoft, Cisco, Amazon, Orange). Manages support operations where ticket handling is core function. Experience includes 'maintaining respect of ITIL in support journey' and knowledge management roles. Company size appears to be in target range (Eastnets is established fintech with global operations). Has clear decision-making authority as manager overseeing support teams and processes. Career progression shows deep expertise in support operations where resolution quality, knowledge retention, and process efficiency would be critical pain points.",
+    "analysis": {
+      "talking_points": [
+        "Technical support management experience across multiple companies",
+        "ITIL framework implementation and maintenance",
+        "Experience with major tech companies (Microsoft, Cisco, Amazon)",
+        "Multilingual capabilities (Arabic, French, English, Spanish, Italian)",
+        "Product management and service delivery background",
+        "Team leadership and management experience",
+        "VoIP and networking technical expertise"
+      ],
+      "pain_points": [
+        "Managing technical support teams across different time zones/locations",
+        "Ensuring ITIL compliance in customer support processes",
+        "Scaling support operations for growing customer base",
+        "Maintaining service quality while managing costs",
+        "Technical team training and skill development",
+        "Cross-functional collaboration between support and product teams",
+        "Customer satisfaction and retention metrics"
+      ],
+      "outreach_approach": "Start with a value-focused email highlighting how your SaaS solution can streamline technical support operations, improve team efficiency, and enhance customer satisfaction metrics. Reference his experience with ITIL and major tech companies to establish credibility. Offer a brief discovery call to discuss specific challenges in his current support operations.",
+      "personalization": [
+        "Reference his current role as Technical Support Manager at Eastnets",
+        "Mention his ITIL experience from Microsoft role",
+        "Note his multilingual capabilities as an asset for global support operations",
+        "Connect his product management background to how your solution supports product teams",
+        "Reference his technical expertise with Cisco VoIP applications"
+      ]
+    }
+  },
+  {
+    "email": "angie@headspin.io",
+    "name": "Angie Rai",
+    "company": "Headspin",
+    "job_title": "VP of Customer Success and Sales",
+    "linkedin_url": "linkedin.com/in/angie-rai",
+    "is_relevant": true,
+    "classification_reason": "VP of Customer Success at HeadSpin with extensive operational leadership experience managing large global teams (300+ offshore team at Wish, 200+ person operations at Accenture), strong focus on process improvement, quality assurance, and scaling operations. Her current role overseeing customer success operations at a growing SaaS company (HeadSpin provides app testing platform) directly aligns with support/IT operational challenges. Her background shows progression in operational leadership with authority to influence tools/processes for team efficiency and knowledge management.",
+    "analysis": {
+      "talking_points": [
+        "Her role as VP of Customer Success and Sales at HeadSpin, focusing on improving digital experiences and customer satisfaction",
+        "Her background in managing large teams and operations at companies like Accenture and Wish, highlighting her experience in scaling operations and driving efficiency",
+        "Her involvement in quality engineering and testing, as seen from her engagement with posts about QE engineers and QA conferences like STARWEST",
+        "Her interest in global initiatives and cross-functional collaboration, as evidenced by her volunteer work and leadership roles in organizations like Net Impact"
+      ],
+      "pain_points": [
+        "Challenges in scaling customer success and sales operations efficiently while maintaining high-quality digital experiences",
+        "Managing large, distributed teams and ensuring consistent performance and training across global locations",
+        "Staying updated with the latest trends in quality engineering, AI, and automation to drive innovation in testing and customer experience",
+        "Balancing cost efficiency with the need for advanced infrastructure and tools to support app testing and performance analytics"
+      ],
+      "outreach_approach": "Start with a personalized email or LinkedIn message that acknowledges her role and recent activities, such as her engagement with QA conferences or her focus on quality engineering. Offer insights or solutions related to scaling customer success, improving team efficiency, or leveraging AI in testing. Suggest a brief call to discuss how your SaaS solution can address specific pain points she might be facing.",
+      "personalization": [
+        "Mention her recent engagement with posts about QE engineers in Bangalore or her interest in STARWEST 2025 to show you've done your research",
+        "Reference her transition from Senior Director of Sales to VP of Customer Success and Sales, highlighting her growth and expanded responsibilities",
+        "Note her volunteer work with Mission Hospice or Net Impact to demonstrate an understanding of her values and commitment to social impact",
+        "Acknowledge her multilingual skills (Punjabi, Hindi, French) and global experience, which could relate to her work with diverse teams and markets"
+      ]
+    }
+  },
+  {
+    "email": "",
+    "name": "John Gniadek",
+    "company": "Connectbase",
+    "job_title": "VP of Customer Success",
+    "linkedin_url": "linkedin.com/in/johngniadek",
+    "is_relevant": true,
+    "classification_reason": "VP of Customer Success at Connectbase with decision-making authority over customer success operations. Role involves managing customer support teams, handling escalations, and driving operational efficiency. Recommendations highlight experience with tough customer situations and conflict resolution, indicating exposure to ticket handling and resolution challenges. Company appears to be in B2B/SaaS space (likely within target size range) where customer success teams typically face ticket bouncing, knowledge loss, and resolution inefficiencies. Profile shows progression in customer-facing leadership roles with focus on process improvement and team management.",
+    "analysis": {
+      "talking_points": [
+        "Customer success leadership and post-sales expertise",
+        "Experience managing large enterprise customers and tough situations",
+        "Focus on driving customer and employee satisfaction",
+        "Background in coaching and leadership development",
+        "Experience with growth companies and scaling operations"
+      ],
+      "pain_points": [
+        "Managing complex customer relationships and escalations",
+        "Scaling customer success operations in growing organizations",
+        "Balancing customer satisfaction with business objectives",
+        "Team leadership and development challenges",
+        "Post-sales service delivery and retention optimization"
+      ],
+      "outreach_approach": "Start with a value-focused email that acknowledges their customer success expertise and focuses on how your solution can help scale their team's impact, improve customer retention metrics, and streamline post-sales operations. Reference their leadership experience and focus on strategic outcomes rather than just product features.",
+      "personalization": [
+        "Reference their role as VP of Customer Success at Connectbase",
+        "Mention their volunteer coaching experience to show you've done research",
+        "Connect to their focus on customer and employee satisfaction",
+        "Note their experience with enterprise customers and complex situations",
+        "Acknowledge their leadership approach based on the positive recommendations they've received"
+      ]
+    }
+  },
+  {
+    "email": "aycan.gomec@useinsider.com",
+    "name": "Aycan Gomec",
+    "company": "Insider",
+    "job_title": "VP of Customer Success",
+    "linkedin_url": "linkedin.com/in/aycan-gomec-b491a62",
+    "is_relevant": false,
+    "classification_reason": "Profile shows VP of Marketing role focused on B2B SaaS growth, data-driven GTM, and product innovation - not support/IT/customer success operations. No evidence of managing support teams, ticket handling processes, or operational chaos related to resolution horror, agent turnover, or knowledge management. Role appears focused on marketing strategy and customer experience from a marketing perspective rather than operational support functions.",
+    "analysis": null
+  }
+]

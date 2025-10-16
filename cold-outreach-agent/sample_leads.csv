@@ -1,0 +1,6 @@
+email,name,company,linkedin_url,job_title
+john.smith@acme.com,John Smith,Acme SaaS,https://linkedin.com/in/johnsmith,VP Engineering
+sarah.jones@techcorp.com,Sarah Jones,TechCorp,https://linkedin.com/in/sarahjones,CTO
+mike.wilson@startupxyz.com,Mike Wilson,StartupXYZ,https://linkedin.com/in/mikewilson,Engineering Manager
+emily.brown@cloudinc.com,Emily Brown,Cloud Inc,https://linkedin.com/in/emilybrown,Director of Engineering
+david.lee@devtools.com,David Lee,DevTools Co,https://linkedin.com/in/davidlee,Head of Engineering

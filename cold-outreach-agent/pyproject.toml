@@ -1,0 +1,15 @@
+[project]
+name = "cold-outreach-agent"
+version = "0.1.0"
+description = "Lead Pipeline with LangGraph, Cerebras, and Bright Data"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain-anthropic>=0.3.22",
+    "langchain-core>=0.3.79",
+    "langgraph>=0.6.10",
+    "langchain-openai>=0.3.0",
+    "mcp>=1.1.2",
+    "pandas>=2.2.0",
+    "aiohttp>=3.11.11",
+]
