@@ -166,6 +166,13 @@ uv run python main.py "Найди все Python файлы в текущей д�
 # Простой запуск через скрипт
 ./scripts/run.sh "Search for AI news and summarize it"
 
+# Запуск с файлом задачи (для многострочных заданий)
+./scripts/run.sh tasks/example_task.txt
+
+# Создайте свой файл с заданием
+echo "Какие новости сегодня в мире технологий?" > tasks/my_task.txt
+./scripts/run.sh tasks/my_task.txt
+
 # Запуск примеров
 uv run python examples/basic_usage.py
 uv run python examples/with_mcp.py

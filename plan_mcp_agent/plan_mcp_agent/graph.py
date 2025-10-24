@@ -37,17 +37,18 @@ class PlanExecuteGraph:
     4. Repeat until complete or max iterations
     """
 
-    def __init__(self, llm, tools, max_iterations: int = 20):
+    def __init__(self, llm, tools, max_iterations: int = 20, executor_max_iterations: int = 50):
         """
         Initialize the planning graph.
 
         Args:
             llm: Language model for agents
             tools: List of available tools
-            max_iterations: Maximum number of execution iterations
+            max_iterations: Maximum number of plan-execute iterations
+            executor_max_iterations: Maximum tool calls per execution step (default: 50)
         """
         self.planner = PlannerAgent(llm)
-        self.executor = ExecutorAgent(llm, tools)
+        self.executor = ExecutorAgent(llm, tools, max_iterations=executor_max_iterations)
         self.replanner = ReplannerAgent(llm)
         self.max_iterations = max_iterations
         self.graph = self._build_graph()

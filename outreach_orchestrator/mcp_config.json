@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-sequential-thinking"],
+      "transport": "stdio"
+    },
+    "bright-data": {
+      "command": "npx",
+      "args": ["@brightdata/mcp"],
+      "env": {
+        "API_TOKEN": "31fa7760465a064bd08bec7c86424078128942e4a77b1e61d007aa6d5f4bd443",
+        "BROWSER_AUTH": "brd-customer-hl_f3364e9e-zone-scraping_browser1:vodf314ymsot"
+      },
+      "transport": "stdio"
+    },
+    "tavily-mcp": {
+      "command": "npx",
+      "args": ["tavily-mcp@0.1.2"],
+      "env": {
+        "TAVILY_API_KEY": "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"
+      },
+      "transport": "stdio"
+    }
+  }
+}

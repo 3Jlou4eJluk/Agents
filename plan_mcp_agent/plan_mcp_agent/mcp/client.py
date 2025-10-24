@@ -62,15 +62,9 @@ class MCPClientManager:
                 # Test each server individually with timeout
                 async def test_server():
                     test_client = MultiServerMCPClient({server_name: server_config})
-                    try:
-                        await test_client.get_tools()
-                        return True
-                    finally:
-                        # Properly cleanup test client
-                        try:
-                            await test_client.__aexit__(None, None, None)
-                        except Exception:
-                            pass
+                    # Simply try to get tools - client manages sessions internally
+                    await test_client.get_tools()
+                    return True
 
                 await asyncio.wait_for(test_server(), timeout=timeout_per_server)
                 working_servers[server_name] = server_config
@@ -118,8 +112,11 @@ class MCPClientManager:
         """Close all MCP server connections."""
         if self.client:
             try:
-                # Properly close the MCP client using its context manager protocol
-                await self.client.__aexit__(None, None, None)
+                # As of langchain-mcp-adapters 0.1.0, MultiServerMCPClient
+                # no longer supports context manager protocol.
+                # The client manages sessions internally, so we just clear references.
+                # Give any background tasks time to cleanup
+                await asyncio.sleep(0.1)
             except Exception as e:
                 # Silently handle cleanup errors
                 pass

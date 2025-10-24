@@ -14,18 +14,20 @@ class ExecutorAgent:
     Uses ReAct pattern with tool calling.
     """
 
-    def __init__(self, llm, tools: List[BaseTool]):
+    def __init__(self, llm, tools: List[BaseTool], max_iterations: int = 30):
         """
         Initialize the executor agent.
 
         Args:
             llm: Language model with tool calling capability
             tools: List of available tools
+            max_iterations: Maximum number of tool call iterations per step (default: 30)
         """
         self.llm = llm
         self.tools = tools
         self.tool_node = ToolNode(tools)
         self.llm_with_tools = llm.bind_tools(tools)
+        self.max_iterations = max_iterations
 
     async def execute_step(
         self,
@@ -66,11 +68,10 @@ Previous Results:
             HumanMessage(content=context_str)
         ]
 
-        max_iterations = 10
         iteration = 0
 
         try:
-            while iteration < max_iterations:
+            while iteration < self.max_iterations:
                 iteration += 1
 
                 # Get LLM response
@@ -124,6 +125,13 @@ Previous Results:
             )
 
         try:
+            # Check if this is an MCP tool (not OS tool)
+            os_tools = ['read_file', 'write_file', 'list_directory', 'execute_command', 'get_current_time']
+            is_mcp_tool = tool_name not in os_tools
+
+            if is_mcp_tool:
+                print(f"🔧 Calling MCP: {tool_name}")
+
             # Execute the tool
             if hasattr(tool, "ainvoke"):
                 result = await tool.ainvoke(tool_args)

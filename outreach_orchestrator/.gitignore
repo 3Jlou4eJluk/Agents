@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data
+data/input/*
+!data/input/.gitkeep
+data/output/*
+!data/output/.gitkeep
+*.db
+*.db-journal
+
+# Logs
+*.log
+
+# Context (personal data)
+context/GTM.md
+context/guides/*
+!context/guides/.gitkeep
+context/agent_instruction.md

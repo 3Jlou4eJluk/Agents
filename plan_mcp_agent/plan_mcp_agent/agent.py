@@ -26,6 +26,7 @@ class PlanMCPAgent:
         mcp_config: Optional[Dict[str, Dict[str, Any]]] = None,
         api_key: Optional[str] = None,
         max_iterations: int = 20,
+        executor_max_iterations: int = 50,
         enable_os_tools: bool = True
     ):
         """
@@ -39,7 +40,8 @@ class PlanMCPAgent:
                    - deepseek: deepseek-chat, deepseek-coder, etc.
             mcp_config: MCP server configuration
             api_key: API key (or set via environment variables)
-            max_iterations: Maximum execution iterations
+            max_iterations: Maximum plan-execute iterations (default: 20)
+            executor_max_iterations: Maximum tool calls per step (default: 50)
             enable_os_tools: Whether to enable OS tools
         """
         load_dotenv()
@@ -47,6 +49,7 @@ class PlanMCPAgent:
         self.model_name = model
         self.mcp_config = mcp_config
         self.max_iterations = max_iterations
+        self.executor_max_iterations = executor_max_iterations
         self.enable_os_tools = enable_os_tools
 
         # Initialize LLM
@@ -107,12 +110,14 @@ class PlanMCPAgent:
         self.graph = PlanExecuteGraph(
             self.llm,
             self.tools,
-            max_iterations=self.max_iterations
+            max_iterations=self.max_iterations,
+            executor_max_iterations=self.executor_max_iterations
         )
 
         print(f"✓ Agent initialized with {len(self.tools)} total tools")
         print(f"  Model: {self.model_name}")
         print(f"  Max iterations: {self.max_iterations}")
+        print(f"  Executor max tool calls: {self.executor_max_iterations}")
 
     async def run(self, objective: str) -> dict:
         """

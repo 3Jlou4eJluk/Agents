@@ -1,0 +1,33 @@
+[project]
+name = "outreach-orchestrator"
+version = "0.1.0"
+description = "Parallel cold outreach orchestrator with classification and letter generation"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Core dependencies
+    "aiosqlite>=0.19.0",
+    "tqdm>=4.66.0",
+    "python-dotenv>=1.0.0",
+
+    # LangChain for agent integration
+    "langchain-core>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "langchain-anthropic>=0.3.0",
+
+    # LangGraph for pipeline orchestration
+    "langgraph>=0.2.0",
+
+    # MCP integration (via plan_mcp_agent)
+    "langchain-mcp-adapters>=0.1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
