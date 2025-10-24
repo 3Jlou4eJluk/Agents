@@ -1,17 +1,30 @@
 #!/bin/bash
 
 # Simple script to run the agent with a query
-# Usage: ./scripts/run.sh "Your query here"
+# Usage:
+#   ./scripts/run.sh "Your query here"
+#   ./scripts/run.sh path/to/query.txt
 
 # Check if query is provided
 if [ -z "$1" ]; then
-    echo "Usage: $0 \"Your query here\""
+    echo "Usage: $0 \"Your query here\" OR $0 path/to/query.txt"
     echo "Example: $0 \"Search for AI news and summarize it\""
+    echo "Example: $0 tasks/my_task.txt"
     exit 1
 fi
 
-# Get the query from the first argument
-QUERY="$1"
+# Check if the argument is a file
+if [ -f "$1" ]; then
+    echo "📄 Reading query from file: $1"
+    QUERY=$(cat "$1")
+    if [ -z "$QUERY" ]; then
+        echo "Error: File is empty"
+        exit 1
+    fi
+else
+    # Get the query from the first argument
+    QUERY="$1"
+fi
 
 # Get the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

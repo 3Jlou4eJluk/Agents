@@ -62,8 +62,15 @@ class MCPClientManager:
                 # Test each server individually with timeout
                 async def test_server():
                     test_client = MultiServerMCPClient({server_name: server_config})
-                    await test_client.get_tools()
-                    return True
+                    try:
+                        await test_client.get_tools()
+                        return True
+                    finally:
+                        # Properly cleanup test client
+                        try:
+                            await test_client.__aexit__(None, None, None)
+                        except Exception:
+                            pass
 
                 await asyncio.wait_for(test_server(), timeout=timeout_per_server)
                 working_servers[server_name] = server_config
@@ -110,9 +117,15 @@ class MCPClientManager:
     async def close(self):
         """Close all MCP server connections."""
         if self.client:
-            # MultiServerMCPClient handles cleanup automatically
-            self.client = None
-            self._tools = []
+            try:
+                # Properly close the MCP client using its context manager protocol
+                await self.client.__aexit__(None, None, None)
+            except Exception as e:
+                # Silently handle cleanup errors
+                pass
+            finally:
+                self.client = None
+                self._tools = []
 
 
 def load_mcp_config_from_file(config_path: str) -> Dict[str, Dict[str, Any]]:
