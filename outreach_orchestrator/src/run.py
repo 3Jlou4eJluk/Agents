@@ -75,6 +75,13 @@ Examples:
         help='Resume from previous run (uses same database)'
     )
 
+    parser.add_argument(
+        '--config',
+        type=str,
+        default=None,
+        help='Path to config.json file (default: config.json in project root)'
+    )
+
     args = parser.parse_args()
 
     # Validate arguments
@@ -102,7 +109,8 @@ Examples:
         context_dir=args.context,
         workers=args.workers,
         resume=args.resume,
-        db_path=args.db
+        db_path=args.db,
+        config_path=args.config
     )
 
     # Run

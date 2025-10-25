@@ -99,7 +99,8 @@ class SimplePlanMCPAgent:
         model: str = "deepseek:deepseek-chat",
         mcp_config: Optional[Dict[str, Dict[str, Any]]] = None,
         max_iterations: int = 10,
-        shared_mcp_manager: Optional["MCPClientManager"] = None
+        shared_mcp_manager: Optional["MCPClientManager"] = None,
+        temperature: float = 0.7
     ):
         load_dotenv()
 
@@ -107,6 +108,7 @@ class SimplePlanMCPAgent:
         self.mcp_config = mcp_config
         self.max_iterations = max_iterations
         self.owns_mcp_manager = shared_mcp_manager is None
+        self.temperature = temperature
 
         # Initialize LLM
         provider, model_id = model.split(":", 1) if ":" in model else ("deepseek", model)
@@ -116,7 +118,7 @@ class SimplePlanMCPAgent:
             model=model_id,
             api_key=api_key,
             base_url="https://api.deepseek.com",
-            temperature=0.3
+            temperature=temperature
         )
 
         # Use shared MCP manager or create new one

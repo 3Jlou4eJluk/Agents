@@ -1,0 +1,35 @@
+{
+  "models": {
+    "classification": {
+      "model": "deepseek-chat",
+      "temperature": 0,
+      "description": "Stage 1: Lead classification - deterministic"
+    },
+    "letter_generation": {
+      "model": "deepseek-chat",
+      "temperature": 0.8,
+      "description": "Stage 2: Letter writing - creative and insightful"
+    }
+  },
+  "worker_pool": {
+    "num_workers": 5,
+    "max_agent_iterations": 30
+  },
+  "prompt_mode": "creative",
+  "prompt_modes": {
+    "standard": {
+      "description": "Structured prompt with example phrases - may lead to repetitive language",
+      "use_when": "Testing or when stronger guidance needed"
+    },
+    "creative": {
+      "description": "Philosophy-driven prompt without example phrases - maximizes uniqueness",
+      "use_when": "Production use - prevents 'this usually means' templating"
+    }
+  },
+  "timing": {
+    "description": "Default send time patterns by timezone",
+    "us_east_coast_morning": "17:00-19:00 MSK",
+    "europe_morning": "10:00-12:00 MSK",
+    "preferred_days": ["Tuesday", "Wednesday", "Thursday"]
+  }
+}

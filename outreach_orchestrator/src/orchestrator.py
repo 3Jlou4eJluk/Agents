@@ -12,6 +12,7 @@ from .task_queue import TaskQueue
 from .worker_pool import WorkerPool
 from .context_loader import ContextLoader
 from .result_writer import ResultWriter
+from .config_loader import load_config
 
 
 class OutreachOrchestrator:
@@ -27,7 +28,8 @@ class OutreachOrchestrator:
         context_dir: str = "context",
         workers: int = 5,
         resume: bool = False,
-        db_path: str = "data/progress.db"
+        db_path: str = "data/progress.db",
+        config_path: Optional[str] = None
     ):
         """
         Initialize orchestrator.
@@ -39,6 +41,7 @@ class OutreachOrchestrator:
             workers: Number of parallel workers
             resume: Whether to resume from previous run
             db_path: Path to SQLite database
+            config_path: Path to config.json file
         """
         self.input_csv = input_csv
         self.output_csv = output_csv
@@ -46,6 +49,14 @@ class OutreachOrchestrator:
         self.num_workers = workers
         self.resume = resume
         self.db_path = db_path
+
+        # Load configuration
+        self.config = load_config(config_path)
+        prompt_mode = self.config.get('prompt_mode', 'creative')
+        print(f"✓ Loaded config:")
+        print(f"  - Classification temp: {self.config['models']['classification']['temperature']}")
+        print(f"  - Letter generation temp: {self.config['models']['letter_generation']['temperature']}")
+        print(f"  - Prompt mode: {prompt_mode} {'(no template phrases)' if prompt_mode == 'creative' else '(with examples)'}")
 
         # Components
         self.task_queue: Optional[TaskQueue] = None
@@ -129,7 +140,8 @@ class OutreachOrchestrator:
         # Initialize worker pool
         self.worker_pool = WorkerPool(
             num_workers=self.num_workers,
-            context=self.context
+            context=self.context,
+            config=self.config
         )
         print(f"✓ Initialized worker pool ({self.num_workers} workers)")
 

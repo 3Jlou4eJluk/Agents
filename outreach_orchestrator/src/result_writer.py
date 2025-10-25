@@ -63,12 +63,17 @@ class ResultWriter:
             writer.writeheader()
 
             for task in tasks:
-                lead_data = task.get('lead_data', {})
+                # Skip None tasks (shouldn't happen, but defensive programming)
+                if not task:
+                    continue
+
+                lead_data = task.get('lead_data') or {}
                 stage1 = task.get('stage1_result') or {}
                 stage2 = task.get('stage2_result') or {}
 
                 # Extract letter if present
-                letter = stage2.get('letter') if isinstance(stage2.get('letter'), dict) else {}
+                letter_data = stage2.get('letter') if stage2 else None
+                letter = letter_data if isinstance(letter_data, dict) else {}
 
                 # Determine final status
                 final_status = ResultWriter._determine_final_status(task, stage1, stage2)
@@ -163,17 +168,24 @@ class ResultWriter:
             tasks: List of processed tasks
             output_path: Path where results were written
         """
-        total = len(tasks)
-        stage1_relevant = sum(1 for t in tasks if t.get('stage1_result', {}).get('relevant'))
+        # Filter out None tasks
+        valid_tasks = [t for t in tasks if t]
+        total = len(valid_tasks)
+
+        if total == 0:
+            print("\n⚠️ No tasks to summarize")
+            return
+
+        stage1_relevant = sum(1 for t in valid_tasks if (t.get('stage1_result') or {}).get('relevant'))
         stage1_not_relevant = total - stage1_relevant
 
-        stage2_run = sum(1 for t in tasks if t.get('stage2_result'))
-        stage2_rejected = sum(1 for t in tasks if t.get('stage2_result', {}).get('rejected'))
-        letters_generated = sum(1 for t in tasks
-                                if t.get('stage2_result', {}).get('letter')
-                                and not t.get('stage2_result', {}).get('rejected'))
+        stage2_run = sum(1 for t in valid_tasks if t.get('stage2_result'))
+        stage2_rejected = sum(1 for t in valid_tasks if (t.get('stage2_result') or {}).get('rejected'))
+        letters_generated = sum(1 for t in valid_tasks
+                                if (t.get('stage2_result') or {}).get('letter')
+                                and not (t.get('stage2_result') or {}).get('rejected'))
 
-        errors = sum(1 for t in tasks if t.get('status') == 'failed')
+        errors = sum(1 for t in valid_tasks if t.get('status') == 'failed')
 
         print("\n" + "="*80)
         print("📊 PROCESSING SUMMARY")
