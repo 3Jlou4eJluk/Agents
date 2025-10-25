@@ -2,9 +2,56 @@
 Configuration loader for the orchestrator.
 """
 
+import os
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from langchain_openai import ChatOpenAI
+from .rate_limiter import TokenBucketRateLimiter, RateLimitedLLM
+from .logger import get_logger
+
+logger = get_logger(__name__)
+
+# Global rate limiters (one per provider)
+_RATE_LIMITERS: Dict[str, TokenBucketRateLimiter] = {}
+
+
+def get_rate_limiter(provider: str, config: Dict[str, Any]) -> Optional[TokenBucketRateLimiter]:
+    """
+    Get or create a rate limiter for a provider.
+
+    Args:
+        provider: Provider name (e.g., 'openai', 'deepseek')
+        config: Configuration dictionary
+
+    Returns:
+        Rate limiter instance or None if disabled
+    """
+    # Check if rate limiting is enabled
+    rate_limiting_config = config.get('rate_limiting', {})
+    if not rate_limiting_config.get('enabled', False):
+        return None
+
+    # Check if provider has rate limiting config
+    provider_config = rate_limiting_config.get(provider)
+    if not provider_config:
+        logger.warning(f"No rate limiting config for provider '{provider}', rate limiting disabled")
+        return None
+
+    # Return existing rate limiter if available (singleton)
+    if provider in _RATE_LIMITERS:
+        return _RATE_LIMITERS[provider]
+
+    # Create new rate limiter
+    rate = provider_config.get('requests_per_second', 10)
+    burst = provider_config.get('burst', 20)
+
+    rate_limiter = TokenBucketRateLimiter(rate=rate, burst=burst)
+    _RATE_LIMITERS[provider] = rate_limiter
+
+    logger.info(f"✓ Rate limiter for '{provider}': {rate} req/sec, burst={burst}")
+
+    return rate_limiter
 
 
 def load_config(config_path: str = None) -> Dict[str, Any]:
@@ -73,3 +120,75 @@ def get_letter_generation_config(config: Dict[str, Any]) -> Dict[str, Any]:
         "model": "deepseek-chat",
         "temperature": 0.7
     })
+
+
+def create_llm(config: Dict[str, Any], model_config: Dict[str, Any], **kwargs) -> ChatOpenAI:
+    """
+    Create LLM client based on provider configuration.
+
+    Args:
+        config: Full configuration dictionary
+        model_config: Model-specific config (from classification or letter_generation)
+        **kwargs: Additional arguments to pass to ChatOpenAI
+
+    Returns:
+        ChatOpenAI instance configured for the specified provider
+    """
+    provider = model_config.get("provider", "deepseek")
+    model = model_config.get("model", "deepseek-chat")
+    temperature = model_config.get("temperature", 0.7)
+
+    # Get provider config
+    providers = config.get("providers", {})
+    provider_config = providers.get(provider, {})
+
+    # Get API key
+    if "api_key" in provider_config:
+        # Direct API key in config
+        api_key = provider_config["api_key"]
+    elif "api_key_env" in provider_config:
+        # API key from environment variable
+        api_key = os.getenv(provider_config["api_key_env"])
+    else:
+        # Fallback to default env vars
+        api_key = os.getenv("OPENAI_API_KEY") if provider == "openai" else os.getenv("DEEPSEEK_API_KEY")
+
+    # Get base URL
+    base_url = provider_config.get("base_url", "https://api.openai.com/v1")
+
+    # Handle JSON mode (optional, controlled by config)
+    # Note: JSON mode is incompatible with tool calling in most providers
+    # Only enable if explicitly requested via use_json_mode flag
+    model_kwargs = kwargs.get('model_kwargs', {})
+
+    # Check for existing response_format in kwargs (might come from classification stage)
+    has_existing_format = 'model_kwargs' in kwargs and 'response_format' in kwargs['model_kwargs']
+
+    if model_config.get('use_json_mode', False) and not has_existing_format:
+        # Enable JSON mode (OpenAI, DeepSeek support)
+        # WARNING: This will prevent tool calling!
+        model_kwargs['response_format'] = {"type": "json_object"}
+        kwargs['model_kwargs'] = model_kwargs
+    elif 'response_format' in model_config and not has_existing_format:
+        # Legacy: support old response_format config
+        response_format = model_config['response_format']
+        if response_format == 'json_object':
+            model_kwargs['response_format'] = {"type": "json_object"}
+        kwargs['model_kwargs'] = model_kwargs
+
+    # Create LLM
+    llm = ChatOpenAI(
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
+        temperature=temperature,
+        **kwargs
+    )
+
+    # Wrap with rate limiter if enabled
+    rate_limiter = get_rate_limiter(provider, config)
+    if rate_limiter:
+        llm = RateLimitedLLM(llm, rate_limiter)
+        logger.debug(f"LLM wrapped with rate limiter for provider '{provider}'")
+
+    return llm

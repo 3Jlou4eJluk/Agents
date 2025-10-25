@@ -21,17 +21,21 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Basic usage
+  # Basic usage (clears database by default)
   python -m src.run --input data/input/leads.csv --output data/output/results.csv
 
   # With specific number of workers
   python -m src.run --input leads.csv --output results.csv --workers 3
 
-  # Resume from previous run
+  # Resume from previous run (keeps database)
   python -m src.run --resume
 
   # Custom context directory
   python -m src.run --input leads.csv --context /path/to/context
+
+Note:
+  By default, the database is cleared on each new run.
+  Use --resume to continue from a previous run without clearing.
         """
     )
 
@@ -72,7 +76,14 @@ Examples:
     parser.add_argument(
         '--resume', '-r',
         action='store_true',
-        help='Resume from previous run (uses same database)'
+        help='Resume from previous run (keeps database intact; default is to clear database on new runs)'
+    )
+
+    parser.add_argument(
+        '--config',
+        type=str,
+        default=None,
+        help='Path to config.json file (default: config.json in project root)'
     )
 
     parser.add_argument(

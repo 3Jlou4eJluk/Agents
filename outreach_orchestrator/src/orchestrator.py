@@ -13,6 +13,9 @@ from .worker_pool import WorkerPool
 from .context_loader import ContextLoader
 from .result_writer import ResultWriter
 from .config_loader import load_config
+from .logger import setup_logging, get_logger
+
+logger = get_logger(__name__)
 
 
 class OutreachOrchestrator:
@@ -53,11 +56,36 @@ class OutreachOrchestrator:
         # Load configuration
         self.config = load_config(config_path)
         prompt_mode = self.config.get('prompt_mode', 'creative')
+
+        # Get model configs
+        classification_cfg = self.config['models']['classification']
+        letter_cfg = self.config['models']['letter_generation']
+
+        # Get rate limiting config
+        rate_limiting_cfg = self.config.get('rate_limiting', {})
+        rate_limiting_enabled = rate_limiting_cfg.get('enabled', False)
+
         print(f"✓ Loaded config:")
-        print(f"  - Classification temp: {self.config['models']['classification']['temperature']}")
-        print(f"  - Letter generation temp: {self.config['models']['letter_generation']['temperature']}")
+        print(f"  - Classification: {classification_cfg.get('provider', 'deepseek')}/{classification_cfg['model']} (temp={classification_cfg['temperature']})")
+        print(f"  - Letter generation: {letter_cfg.get('provider', 'deepseek')}/{letter_cfg['model']} (temp={letter_cfg['temperature']})")
         print(f"  - Prompt mode: {prompt_mode} {'(no template phrases)' if prompt_mode == 'creative' else '(with examples)'}")
 
+        # Show rate limiting info
+        if rate_limiting_enabled:
+            providers_info = []
+            for provider in ['openai', 'deepseek']:
+                if provider in rate_limiting_cfg:
+                    rps = rate_limiting_cfg[provider].get('requests_per_second', '?')
+                    burst = rate_limiting_cfg[provider].get('burst', '?')
+                    providers_info.append(f"{provider}: {rps} req/s (burst={burst})")
+            if providers_info:
+                print(f"  - Rate limiting: ✓ ENABLED ({', '.join(providers_info)})")
+        else:
+        print(f"  - Rate limiting: ✗ DISABLED")
+
+        # Show MCP status
+        mcp_enabled = self.config.get('mcp', {}).get('enabled', True)
+        print(f"  - MCP tools: {'✓ ENABLED' if mcp_enabled else '✗ DISABLED'}")
         # Components
         self.task_queue: Optional[TaskQueue] = None
         self.worker_pool: Optional[WorkerPool] = None
@@ -71,6 +99,10 @@ class OutreachOrchestrator:
         print("\n" + "="*80)
         print("🚀 OUTREACH ORCHESTRATOR - Starting")
         print("="*80)
+
+        # Setup logging
+        log_file = setup_logging(log_dir="logs", log_level="DEBUG")
+        print(f"📝 Logging to: {log_file}\n")
 
         # Setup signal handlers for graceful shutdown
         self._setup_signal_handlers()
@@ -134,8 +166,14 @@ class OutreachOrchestrator:
 
         # Initialize task queue
         self.task_queue = TaskQueue(self.db_path)
-        await self.task_queue.initialize()
-        print("✓ Initialized task queue")
+
+        # Clean database if NOT resuming (default behavior)
+        if not self.resume:
+            await self.task_queue.initialize(clean=True)
+            print("✓ Initialized task queue (clean start)")
+        else:
+            await self.task_queue.initialize(clean=False)
+            print("✓ Initialized task queue (resume mode)")
 
         # Initialize worker pool
         self.worker_pool = WorkerPool(
@@ -198,16 +236,36 @@ class OutreachOrchestrator:
                     error=result.get('error')
                 )
 
+                # Export results incrementally (so CSV always has processed leads)
+                await self._export_results_incremental()
+
                 # Print progress
                 worker_stats = self.worker_pool.get_stats()
+                token_stats = self.worker_pool.get_token_stats()
+                compression_stats = self.worker_pool.get_compression_stats()
                 processed = worker_stats['processed']
                 stats = await self.task_queue.get_stats()
                 pending = stats['pending']
+
+                # Format token count (in K)
+                total_tokens_k = (token_stats['total_input'] + token_stats['total_output']) / 1000
+                cached_tokens_k = token_stats['total_cached'] / 1000
+                cost_usd = token_stats['total_cost_usd']
 
                 print(f"\n📊 Progress: {processed} processed | {pending} pending | "
                       f"S1:{worker_stats['stage1_relevant']}/{worker_stats['stage1_not_relevant']} | "
                       f"S2:{worker_stats['stage2_letters']}/{worker_stats['stage2_rejected']} | "
                       f"Errors:{worker_stats['errors']}")
+
+                # Token info
+                token_line = f"💰 Tokens: {total_tokens_k:.1f}K total ({cached_tokens_k:.1f}K cached) | Cost: ${cost_usd:.3f}"
+
+                # Add compression info if any compressions occurred
+                if compression_stats['total_compressions'] > 0:
+                    saved = compression_stats['total_messages_before'] - compression_stats['total_messages_after']
+                    token_line += f" | 🗜️  {compression_stats['total_compressions']} compressions ({saved} msgs saved)"
+
+                print(token_line)
 
             except Exception as e:
                 print(f"[{worker_id}] ❌ Worker error: {e}")
@@ -217,9 +275,17 @@ class OutreachOrchestrator:
                     error=str(e)
                 )
 
+    async def _export_results_incremental(self):
+        """Export results incrementally (after each processed lead)."""
+        # Get all tasks (including just-completed ones)
+        tasks = await self.task_queue.get_all_tasks()
+
+        # Write to CSV (silent, no progress output)
+        ResultWriter.write_results(tasks, self.output_csv)
+
     async def _export_results(self):
-        """Export all results to CSV."""
-        print(f"\n💾 Exporting results to: {self.output_csv}")
+        """Export all results to CSV with final summary."""
+        print(f"\n💾 Exporting final results to: {self.output_csv}")
 
         # Get all tasks
         tasks = await self.task_queue.get_all_tasks()
@@ -227,8 +293,12 @@ class OutreachOrchestrator:
         # Write to CSV
         ResultWriter.write_results(tasks, self.output_csv)
 
+        # Get token stats and compression stats
+        token_stats = self.worker_pool.get_token_stats() if self.worker_pool else None
+        compression_stats = self.worker_pool.get_compression_stats() if self.worker_pool else None
+
         # Print summary
-        ResultWriter.print_summary(tasks, self.output_csv)
+        ResultWriter.print_summary(tasks, self.output_csv, token_stats, compression_stats)
 
     def _setup_signal_handlers(self):
         """Setup signal handlers for graceful shutdown."""

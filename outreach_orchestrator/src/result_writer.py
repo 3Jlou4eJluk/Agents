@@ -160,13 +160,15 @@ class ResultWriter:
         return 'success'
 
     @staticmethod
-    def print_summary(tasks: List[Dict[str, Any]], output_path: str):
+    def print_summary(tasks: List[Dict[str, Any]], output_path: str, token_stats: Dict[str, Any] = None, compression_stats: Dict[str, Any] = None):
         """
         Print summary statistics.
 
         Args:
             tasks: List of processed tasks
             output_path: Path where results were written
+            token_stats: Token usage statistics (optional)
+            compression_stats: Compression statistics (optional)
         """
         # Filter out None tasks
         valid_tasks = [t for t in tasks if t]
@@ -203,6 +205,30 @@ class ResultWriter:
 
         if errors > 0:
             print(f"\n⚠️  Errors: {errors}")
+
+        # Token usage summary
+        if token_stats:
+            print(f"\n💰 Token Usage & Cost:")
+            total_tokens = token_stats['total_input'] + token_stats['total_output']
+            print(f"  Total Tokens: {total_tokens:,} ({total_tokens/1000:.1f}K)")
+            print(f"    - Input: {token_stats['total_input']:,}")
+            print(f"    - Output: {token_stats['total_output']:,}")
+            print(f"    - Cached: {token_stats['total_cached']:,} ({token_stats['total_cached']/max(1,token_stats['total_input'])*100:.1f}% of input)")
+            print(f"\n  Stage 1 (Classification): {token_stats['stage1_input'] + token_stats['stage1_output']:,} tokens")
+            print(f"  Stage 2 (Letter Gen): {token_stats['stage2_input'] + token_stats['stage2_output']:,} tokens")
+            print(f"\n  💵 Total Cost: ${token_stats['total_cost_usd']:.3f}")
+            if total > 0:
+                print(f"  📊 Avg Cost per Lead: ${token_stats['total_cost_usd']/total:.4f}")
+
+        # Compression summary
+        if compression_stats and compression_stats['total_compressions'] > 0:
+            print(f"\n🗜️  Context Compression:")
+            print(f"  Total Compressions: {compression_stats['total_compressions']}")
+            msgs_saved = compression_stats['total_messages_before'] - compression_stats['total_messages_after']
+            print(f"  Messages Saved: {msgs_saved} ({compression_stats['total_messages_before']} → {compression_stats['total_messages_after']})")
+            if compression_stats['total_messages_before'] > 0:
+                reduction = (msgs_saved / compression_stats['total_messages_before']) * 100
+                print(f"  Avg Reduction: {reduction:.1f}% per compression")
 
         print(f"\n💾 Results saved to: {output_path}")
         print("="*80 + "\n")

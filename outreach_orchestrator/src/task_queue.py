@@ -26,9 +26,19 @@ class TaskQueue:
         self.db_path = db_path
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
 
-    async def initialize(self):
-        """Create database schema if it doesn't exist."""
+    async def initialize(self, clean: bool = False):
+        """
+        Create database schema if it doesn't exist.
+
+        Args:
+            clean: If True, drop all existing data and start fresh
+        """
         async with aiosqlite.connect(self.db_path) as db:
+            if clean:
+                # Drop existing table to start fresh
+                await db.execute("DROP TABLE IF EXISTS tasks")
+                await db.commit()
+
             await db.execute("""
                 CREATE TABLE IF NOT EXISTS tasks (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,6 +61,12 @@ class TaskQueue:
             await db.execute("""
                 CREATE INDEX IF NOT EXISTS idx_email ON tasks(email)
             """)
+            await db.commit()
+
+    async def clear_all(self):
+        """Clear all tasks from the database."""
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute("DELETE FROM tasks")
             await db.commit()
 
     async def load_from_csv(self, csv_path: str) -> int:
@@ -229,7 +245,7 @@ class TaskQueue:
             return stats
 
     async def get_all_tasks(self) -> List[Dict[str, Any]]:
-        """Get all tasks for final export."""
+        """Get all processed tasks (completed or failed) for export. Excludes pending/processing."""
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute("""
                 SELECT
@@ -242,12 +258,11 @@ class TaskQueue:
                     error,
                     completed_at
                 FROM tasks
+                WHERE status IN ('completed', 'failed')
                 ORDER BY
                     CASE status
                         WHEN 'completed' THEN 1
                         WHEN 'failed' THEN 2
-                        WHEN 'processing' THEN 3
-                        WHEN 'pending' THEN 4
                     END,
                     id
             """)
