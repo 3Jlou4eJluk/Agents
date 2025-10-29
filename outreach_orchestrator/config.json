@@ -1,31 +1,64 @@
 {
+  "providers": {
+    "deepseek": {
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "base_url": "https://api.deepseek.com"
+    },
+    "openai": {
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com/v1"
+    }
+  },
+  "rate_limiting": {
+    "enabled": true,
+    "description": "Prevents 429 (Too Many Requests) errors by controlling request frequency",
+    "openai": {
+      "requests_per_second": 0.25,
+      "burst": 2,
+      "note": "Very conservative: 0.25 req/s = 15 req/min. Safe for any tier."
+    },
+    "deepseek": {
+      "requests_per_second": 5,
+      "burst": 10,
+      "note": "DeepSeek has higher limits, used for Stage 1 classification."
+    }
+  },
   "models": {
+    "_comment": "use_json_mode: Enable strict JSON output (OpenAI/DeepSeek). WARNING: Incompatible with tool calling! Set to false when using MCP tools.",
     "classification": {
+      "provider": "deepseek",
       "model": "deepseek-chat",
       "temperature": 0,
-      "description": "Stage 1: Lead classification - deterministic"
+      "use_json_mode": true,
+      "description": "Stage 1: Lead classification - deterministic (no tools, JSON mode safe) - DeepSeek cheaper and faster"
     },
     "letter_generation": {
-      "model": "deepseek-chat",
+      "provider": "openai",
+      "model": "gpt-5",
       "temperature": 0.8,
-      "description": "Stage 2: Letter writing - creative and insightful"
+      "use_json_mode": false,
+      "description": "Stage 2: Letter writing - creative and insightful (uses tools, JSON mode must be disabled) - OpenAI better quality"
     }
+  },
+  "mcp": {
+    "sequential-thinking": false,
+    "bright-data": true,
+    "tavily-mcp": true,
+    "_note": "Set to false to disable specific MCP servers. Server configs remain in mcp_config.json."
   },
   "worker_pool": {
     "num_workers": 5,
-    "max_agent_iterations": 30
+    "max_agent_iterations": 30,
+    "note": "Tier 1 OpenAI (500 req/min): 5 workers optimal. DeepSeek for Stage 1, OpenAI for Stage 2 (best quality)."
+  },
+  "auto_compact": {
+    "enabled": true,
+    "trigger_at_messages": 15,
+    "preserve_last_messages": 5,
+    "summarization_model": "gpt-5-mini",
+    "description": "Auto-compact compresses middle context when message count exceeds trigger. Preserves first message (system prompt) and last N messages (current context)."
   },
   "prompt_mode": "creative",
-  "prompt_modes": {
-    "standard": {
-      "description": "Structured prompt with example phrases - may lead to repetitive language",
-      "use_when": "Testing or when stronger guidance needed"
-    },
-    "creative": {
-      "description": "Philosophy-driven prompt without example phrases - maximizes uniqueness",
-      "use_when": "Production use - prevents 'this usually means' templating"
-    }
-  },
   "timing": {
     "description": "Default send time patterns by timezone",
     "us_east_coast_morning": "17:00-19:00 MSK",

@@ -245,7 +245,7 @@ class TaskQueue:
             return stats
 
     async def get_all_tasks(self) -> List[Dict[str, Any]]:
-        """Get all processed tasks (completed or failed) for export. Excludes pending/processing."""
+        """Get all tasks for final export."""
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute("""
                 SELECT
@@ -258,11 +258,12 @@ class TaskQueue:
                     error,
                     completed_at
                 FROM tasks
-                WHERE status IN ('completed', 'failed')
                 ORDER BY
                     CASE status
                         WHEN 'completed' THEN 1
                         WHEN 'failed' THEN 2
+                        WHEN 'processing' THEN 3
+                        WHEN 'pending' THEN 4
                     END,
                     id
             """)

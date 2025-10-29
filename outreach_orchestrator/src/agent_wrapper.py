@@ -108,7 +108,7 @@ class SimplePlanMCPAgent:
         shared_mcp_manager: Optional["MCPClientManager"] = None,
         temperature: float = 0.7,
         config: Optional[Dict[str, Any]] = None,
-        model_config: Optional[Dict[str, Any]] = None,
+        model_config: Optional[Dict[str, Any]] = None
     ):
         """
         Initialize SimplePlanMCPAgent.

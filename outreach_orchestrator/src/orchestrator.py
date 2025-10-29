@@ -81,11 +81,12 @@ class OutreachOrchestrator:
             if providers_info:
                 print(f"  - Rate limiting: ✓ ENABLED ({', '.join(providers_info)})")
         else:
-        print(f"  - Rate limiting: ✗ DISABLED")
+            print(f"  - Rate limiting: ✗ DISABLED")
 
         # Show MCP status
         mcp_enabled = self.config.get('mcp', {}).get('enabled', True)
         print(f"  - MCP tools: {'✓ ENABLED' if mcp_enabled else '✗ DISABLED'}")
+
         # Components
         self.task_queue: Optional[TaskQueue] = None
         self.worker_pool: Optional[WorkerPool] = None
@@ -236,9 +237,6 @@ class OutreachOrchestrator:
                     error=result.get('error')
                 )
 
-                # Export results incrementally (so CSV always has processed leads)
-                await self._export_results_incremental()
-
                 # Print progress
                 worker_stats = self.worker_pool.get_stats()
                 token_stats = self.worker_pool.get_token_stats()
@@ -275,17 +273,9 @@ class OutreachOrchestrator:
                     error=str(e)
                 )
 
-    async def _export_results_incremental(self):
-        """Export results incrementally (after each processed lead)."""
-        # Get all tasks (including just-completed ones)
-        tasks = await self.task_queue.get_all_tasks()
-
-        # Write to CSV (silent, no progress output)
-        ResultWriter.write_results(tasks, self.output_csv)
-
     async def _export_results(self):
-        """Export all results to CSV with final summary."""
-        print(f"\n💾 Exporting final results to: {self.output_csv}")
+        """Export all results to CSV."""
+        print(f"\n💾 Exporting results to: {self.output_csv}")
 
         # Get all tasks
         tasks = await self.task_queue.get_all_tasks()

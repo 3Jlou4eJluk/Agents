@@ -347,7 +347,6 @@ class WorkerPool:
         task_text = self._format_agent_task(lead_data, linkedin_url, context, tools)
 
         # Create agent with shared MCP manager
-<<<<<<< HEAD
         max_iterations = self.config.get("worker_pool", {}).get("max_agent_iterations", 30)
 
         agent = SimplePlanMCPAgent(
@@ -662,148 +661,6 @@ Read your draft critically:
 - If data fails after retries, reject with clear reason
 - Send time: think about timezone/role/receptiveness, specify in MSK, explain reasoning in notes
 - Assessment can be in Russian
-    def _format_agent_task_standard(self, lead_data: Dict, linkedin_url: str, context: Dict, tools: list) -> str:
-        """
-        Standard mode: Current prompt with example phrases.
-        May lead to repetitive language but provides stronger guidance.
-        """
-        name = (lead_data.get('First Name', '') + ' ' + lead_data.get('Last Name', '')).strip() or lead_data.get('name', 'N/A')
-        company = lead_data.get('companyName') or lead_data.get('company', 'N/A')
-        job_title = lead_data.get('jobTitle') or lead_data.get('job_title', 'N/A')
-
-        # Format available tools with descriptions
-        tools_description = "## Available MCP Tools\n\n"
-        tools_description += "You have access to the following tools:\n\n"
-        for tool in tools:
-            # Truncate long descriptions
-            desc = tool.description[:300] + "..." if len(tool.description) > 300 else tool.description
-            tools_description += f"**{tool.name}**\n{desc}\n\n"
-
-        return f"""
-# Your Mission: Write a Cold Email That Proves You Understand Their World
-
-{tools_description}
-
-## Lead
-- **Name:** {name}
-- **Company:** {company}
-- **Job Title:** {job_title}
-- **LinkedIn:** {linkedin_url}
-
----
-
-## Philosophy: The POV Framework
-
-Mike Wonder achieved a 45.8% reply rate with one insight: **most cold emails educate about solutions, great emails educate about problems.**
-
-Your job is to demonstrate you understand their business better than they expect from a stranger. Not by pitching, but by showing insight.
-
-**Context + Observation/Insight = Your Why**
-
-This isn't a formula to fill in. It's a philosophy: connect dots they haven't connected yet.
-
----
-
-## Your Process
-
-### Phase 1: Research
-
-**For LinkedIn** ({linkedin_url}):
-- Use `scrape_as_markdown` to get the profile (retry once if it fails, then use `tavily-search`)
-- Look for: recent activity, posts, certifications, job changes, projects mentioned
-- Prioritize: What happened in the last 1-3 months? What's fresh?
-
-**For the company**:
-- Use `tavily-search` to research the company
-- Look for: recent news, funding, product launches, hiring patterns, industry challenges
-- Think: What stage are they at? What pressures do they face?
-
-**Important**: Use `scrape_as_markdown` ONLY for LinkedIn. Use `tavily-search` for everything else (company research, news, etc.).
-
----
-
-### Phase 2: Deep Analysis (Use `sequentialthinking`)
-
-After gathering data, use `sequentialthinking` to think through:
-
-**About the person:**
-- What does their recent activity tell you about their current priorities?
-- What challenges does someone in their role + company stage typically face?
-- What do they probably worry about that isn't obvious from their title?
-
-**About the company:**
-- What does their recent news/hiring/growth suggest about internal pressures?
-- At their stage (startup/scaleup/enterprise), what typically breaks first?
-- How does their industry context affect what matters to them?
-
-**Connect to ResolveOnce's pain points:**
-- Where does "knowledge loss in ticket resolution" show up in THEIR world?
-- What's a non-obvious consequence they might not have connected yet?
-- Why does this matter MORE for them specifically than for a generic company?
-
-**The insight test:**
-- Could someone write this observation without researching them? (If yes, go deeper)
-- Does this insight require understanding their specific context? (If no, keep thinking)
-- Would this make them think "huh, I hadn't thought about it that way"? (That's the goal)
-
-**About send timing:**
-- Where are they located? (affects timezone conversion from MSK)
-- What's their role? (executives check email early morning, engineers might prefer afternoon)
-- What industry? (B2B tech companies have different email patterns than others)
-- When would they be most receptive? (start of week for planning, mid-week for execution, avoid Mondays/Fridays?)
-- Think: When do THEY have mental space to think about this problem?
-
----
-
-### Phase 3: Write the Email
-
-**Structure** (POV Framework):
-- **Subject**: 2-3 words max (e.g., "Scaling support", "Knowledge gaps")
-- **Observation**: What you noticed (specific, recent, shows research)
-- **Insight**: What this typically means + the challenge it creates (non-obvious, demonstrates expertise)
-- **Soft question**: Have they considered [solution category]? (not pushy, opens conversation)
-
-**Quality bar:**
-- If you removed the name/company, would this email apply to 10 other people? → Too generic, rewrite
-- Does the insight feel like a consultant who knows their industry? → Good
-- Is the observation something they'd think "how did they notice that?" → Great
-
-**Language:**
-- Write in English
-- Sign as Michael (not Almas)
-- No fluff ("hope this finds you well", "happy Tuesday")
-- No feature pitching
-- No hard meeting request
-
----
-
-### Phase 4: Critical Review (Use `sequentialthinking` again)
-
-Before finalizing, critique your own draft:
-
-**Ask yourself:**
-- Is this observation truly specific to THEM, or could it be anyone in their industry?
-- Is the insight something a smart person in their role would find valuable?
-- Does this sound like I understand their world, or am I guessing?
-- If I received this email, would I reply?
-
-**If the answer to any is "no" or "maybe":**
-- Revise the observation to be more specific
-- Deepen the insight by going one level further (ask "so what?" again)
-- Connect more tightly to their unique context
-
-**The ultimate test:**
-"Could an automated system have written this?" → If yes, it's not good enough.
-
----
-
-## Technical Notes
-
-- Use `scrape_as_markdown` for LinkedIn URL only
-- Use `tavily-search` for company research
-- If data gathering fails after retries, reject the lead with a clear reason
-- Assessment and send time in Russian is fine
-- **Send time**: Think about their timezone, role, and when they're most receptive. Provide specific day + time in MSK (e.g., "Wednesday, 10:00 MSK" for US East Coast morning). Explain your reasoning in notes.
 
 ## Output Format
 
@@ -854,7 +711,6 @@ Example when not relevant (return exactly like this, without ```json blocks):
 {context.get('instruction', '')}
 """
 
-<<<<<<< HEAD
     def _format_agent_task_standard(self, lead_data: Dict, linkedin_url: str, context: Dict, tools: list) -> str:
         """
         Standard mode: Current prompt with example phrases.

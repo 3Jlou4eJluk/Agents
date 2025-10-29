@@ -86,13 +86,6 @@ Note:
         help='Path to config.json file (default: config.json in project root)'
     )
 
-    parser.add_argument(
-        '--config',
-        type=str,
-        default=None,
-        help='Path to config.json file (default: config.json in project root)'
-    )
-
     args = parser.parse_args()
 
     # Validate arguments
