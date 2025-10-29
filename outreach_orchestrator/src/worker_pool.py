@@ -709,6 +709,26 @@ Example when not relevant (return exactly like this, without ```json blocks):
 ## Task Instructions
 
 {context.get('instruction', '')}
+
+---
+
+## CRITICAL WARNING: Do NOT Copy Context Language
+
+**The context documents above are for YOUR understanding only!**
+
+❌ **DO NOT:**
+- Copy phrases from the context documents into your emails
+- Use product-specific terminology ("closure quality", "resolution process", etc.) in subject lines
+- Template subject lines around our product features
+- Sound like you're pitching based on context docs
+
+✅ **DO:**
+- Write subject lines about THEIR specific situation (their company, role, recent activity)
+- Create completely unique emails based on YOUR research of the lead
+- Use the context to understand WHO to target and WHY, not WHAT to write
+- Make every word specific to this individual lead
+
+**Remember:** The lead has NEVER seen our context documents. Your email should sound like you researched THEM, not like you're selling our product.
 """
 
     def _format_agent_task_standard(self, lead_data: Dict, linkedin_url: str, context: Dict, tools: list) -> str:
@@ -901,6 +921,26 @@ Before finalizing, critique your own draft:
 ## Task Instructions
 
 {context.get('instruction', '')}
+
+---
+
+## КРИТИЧЕСКИ ВАЖНО: НЕ Копируй Язык из Контекстных Документов
+
+**Контекстные документы выше - только для ТВОЕГО понимания!**
+
+❌ **НЕ ДЕЛАЙ:**
+- Копируй фразы из контекстных документов в письма
+- Используй продуктовую терминологию ("closure quality", "resolution process", и т.д.) в subject lines
+- Шаблонируй subject lines вокруг фич нашего продукта
+- Звучи как будто питчишь на основе context docs
+
+✅ **ДЕЛАЙ:**
+- Пиши subject lines про ИХ конкретную ситуацию (их компания, роль, недавняя активность)
+- Создавай полностью уникальные письма на основе ТВОЕГО исследования лида
+- Используй контекст чтобы понять КОГО таргетить и ПОЧЕМУ, а не ЧТО писать
+- Делай каждое слово специфичным для этого конкретного лида
+
+**Помни:** Лид НИКОГДА не видел наши контекстные документы. Твое письмо должно звучать как будто ты исследовал ЕГО, а не как будто продаешь наш продукт.
 """
 
     def _format_agent_task(self, lead_data: Dict, linkedin_url: str, context: Dict, tools: list) -> str:
