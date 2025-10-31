@@ -8,7 +8,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
 
-CLASSIFICATION_PROMPT = """You are an ICP pre-screener. Your job is BROAD filtering - only reject OBVIOUS mismatches.
+CLASSIFICATION_PROMPT = """You're doing a quick first-pass filter. Your job is BROAD filtering - only reject OBVIOUS mismatches.
 
 ## Target ICP Context:
 {gtm_context}

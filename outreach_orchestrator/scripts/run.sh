@@ -85,6 +85,13 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 # Change to project directory
 cd "$PROJECT_DIR"
 
+# Load nvm and use Node.js 20 (required for MCP servers)
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+    nvm use 20 &>/dev/null || nvm use default &>/dev/null
+fi
+
 # Activate virtual environment if it exists
 if [ -d ".venv" ]; then
     source .venv/bin/activate

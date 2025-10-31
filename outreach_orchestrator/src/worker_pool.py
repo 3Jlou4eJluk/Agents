@@ -530,7 +530,7 @@ class WorkerPool:
             tools_description += f"**{tool.name}**\n{desc}\n\n"
 
         return f"""
-# Mission: Demonstrate Deep Understanding Through a Consultative Email
+# Your Mission: Write an Email That Shows You Actually Get Their World
 
 {tools_description}
 
@@ -544,13 +544,13 @@ class WorkerPool:
 
 ## The Philosophy
 
-Mike Wonder's 45.8% reply rate came from one shift: stop educating about your solution, start educating about their problem.
+Mike Wonder's 45.8% reply rate came from one simple shift: stop talking about your solution, start talking about their problem.
 
-You're writing as a consultant who understands their world. Your email should make them think "how did this person understand my situation so well?"
+Write like a normal person who deeply understands their world. Your email should make them think "how did this person get my situation so well?"
 
-POV Framework = Context + Observation/Insight = Demonstrating Expertise
+The formula is simple: Notice something specific about them + Share a non-obvious insight = Show you actually get it.
 
-This is not a template. This is a way of thinking.
+This is not a fill-in-the-blanks template. It's a way of thinking.
 
 ---
 
@@ -575,20 +575,21 @@ This is not a template. This is a way of thinking.
 
 Before writing, think through:
 
-**About them:**
-- What does their recent activity reveal about current priorities?
-- What challenges exist at their role + company stage intersection?
-- What keeps them up at night that's not obvious from their title?
+**About the person:**
+- What do their recent posts/activities show about what they care about right now?
+- What problems does someone in their role at a company like theirs actually face?
+- What probably keeps them up at night that you can't tell just from their job title?
 
 **About their company:**
 - Recent news/hiring/growth → what internal pressures does this create?
 - At their stage, what typically breaks first?
 - How does industry context shape what matters to them?
 
-**Connect to our problem space** (knowledge loss in ticket resolution):
-- How does this pain point manifest in THEIR specific world?
-- What consequence might they not have connected yet?
-- Why is this more critical for them than a generic company?
+**Connect to the real problem** (what happens when support knowledge gets lost):
+- Does their team solve the same issues twice because past solutions aren't documented?
+- Do new support hires struggle because they can't find how previous tickets were resolved?
+- Are engineers wasting hours searching through old tickets instead of helping customers?
+- How does THIS pain show up in THEIR specific situation?
 
 **Test your thinking:**
 - Could someone say this without deep research? → Keep digging
@@ -611,16 +612,16 @@ Before writing, think through:
 - Make them curious
 
 **Email body:**
-- Open with what you noticed (specific, recent, shows research)
-- Share the non-obvious pattern or consequence you see
-- Identify the challenge this creates for them
-- End with a soft question that opens conversation without being pushy
+- Open with what you noticed about them (specific, recent, shows you did homework)
+- Share what this probably means for them (non-obvious insight they haven't considered)
+- Connect it to a real problem they're likely facing
+- End with a question that opens dialogue without being salesy
 
-**Quality standard:**
-- Remove their name/company → would this fit 10 others? If yes, too generic
-- Does this sound like you're a consultant in their industry?
-- Would they think "how did they spot that?"
-- Could a bot write this? If yes, start over
+**Quality check:**
+- Take out their name/company → could this work for 10 others? If yes, too generic
+- Does this sound like a real person talking, not a sales pitch?
+- Would they think "how did they notice that about me?"
+- Could ChatGPT write this? If yes, start over
 
 **Language:**
 - English
@@ -631,26 +632,26 @@ Before writing, think through:
 
 ---
 
-### 4. Self-Critique (via `sequentialthinking` again)
+### 4. Reality Check (via `sequentialthinking` again)
 
-Read your draft critically:
+Read what you wrote and be honest:
 
-- Is the observation genuinely specific to them?
-- Would someone smart in their role find the insight valuable?
-- Am I demonstrating understanding or just guessing?
-- If I received this, would I reply?
+- Is this observation truly about THEM, or could it be anyone?
+- Would someone doing their job actually care about this insight?
+- Am I showing I get their world, or am I just guessing?
+- If I got this email, would I actually reply?
 
 **If any answer is "no" or "maybe":**
-- Make observation more specific
-- Deepen insight (ask "so what?" one more time)
-- Tighten connection to their unique context
+- Get more specific about them personally
+- Go one level deeper (ask yourself "so what?" again)
+- Make the connection to their unique situation tighter
 
-**Final check:**
-- Read it out loud mentally
-- Does it sound natural or formulaic?
-- Is each sentence in my own words, not borrowed phrases?
+**Final gut check:**
+- Read it out loud in your head
+- Does it sound like a human talking, or like you're filling in a template?
+- Is each sentence in your own words?
 
-**Critical**: Each email must be unique. No repeated structures. No templated language. This is about demonstrating genuine understanding, not filling in blanks.
+**Important**: Every email must be different. No copy-paste structures. No template phrases. You're showing genuine understanding, not filling in blanks.
 
 ---
 
@@ -718,9 +719,9 @@ Example when not relevant (return exactly like this, without ```json blocks):
 
 ❌ **DO NOT:**
 - Copy phrases from the context documents into your emails
-- Use product-specific terminology ("closure quality", "resolution process", etc.) in subject lines
-- Template subject lines around our product features
-- Sound like you're pitching based on context docs
+- Use jargony terms ("closure quality", "resolution process", "knowledge loss", etc.)
+- Make subject lines about our product or features
+- Sound like you're pitching something based on the context docs
 
 ✅ **DO:**
 - Write subject lines about THEIR specific situation (their company, role, recent activity)
@@ -763,13 +764,13 @@ Example when not relevant (return exactly like this, without ```json blocks):
 
 ## Philosophy: The POV Framework
 
-Mike Wonder achieved a 45.8% reply rate with one insight: **most cold emails educate about solutions, great emails educate about problems.**
+Mike Wonder achieved a 45.8% reply rate with one simple insight: **most cold emails talk about solutions, great emails talk about problems.**
 
-Your job is to demonstrate you understand their business better than they expect from a stranger. Not by pitching, but by showing insight.
+Your job is to show you understand their business better than a random stranger should. Not by pitching anything, but by sharing a real insight.
 
-**Context + Observation/Insight = Your Why**
+**Notice something specific + Share non-obvious insight = Show you get it**
 
-This isn't a formula to fill in. It's a philosophy: connect dots they haven't connected yet.
+This isn't a template to fill in. It's a way of thinking: connect dots they haven't connected yet.
 
 ---
 
@@ -796,46 +797,47 @@ This isn't a formula to fill in. It's a philosophy: connect dots they haven't co
 After gathering data, use `sequentialthinking` to think through:
 
 **About the person:**
-- What does their recent activity tell you about their current priorities?
-- What challenges does someone in their role + company stage typically face?
-- What do they probably worry about that isn't obvious from their title?
+- What do their recent posts/activities show about what they care about right now?
+- What problems does someone in their role at a company like theirs actually face?
+- What probably keeps them up at night that you can't tell just from their job title?
 
 **About the company:**
-- What does their recent news/hiring/growth suggest about internal pressures?
-- At their stage (startup/scaleup/enterprise), what typically breaks first?
-- How does their industry context affect what matters to them?
+- What does their recent news/hiring/growth reveal about internal pressures?
+- At their stage (startup/scaleup/enterprise), what usually breaks first?
+- How does their industry change what matters to them?
 
-**Connect to ResolveOnce's pain points:**
-- Where does "knowledge loss in ticket resolution" show up in THEIR world?
-- What's a non-obvious consequence they might not have connected yet?
-- Why does this matter MORE for them specifically than for a generic company?
+**Connect to the real problem:**
+- Does their team solve the same issues twice because past solutions aren't documented?
+- Do new support hires struggle because they can't find how previous tickets were resolved?
+- Are engineers wasting hours searching through old tickets instead of helping customers?
+- How does THIS pain show up in THEIR specific world?
 
-**The insight test:**
-- Could someone write this observation without researching them? (If yes, go deeper)
-- Does this insight require understanding their specific context? (If no, keep thinking)
-- Would this make them think "huh, I hadn't thought about it that way"? (That's the goal)
+**Reality check on your thinking:**
+- Could someone say this without researching them? (If yes, go deeper)
+- Does this insight need understanding THEIR specific situation? (If no, keep digging)
+- Would this make them pause and think "huh, I hadn't looked at it that way"? (That's the goal)
 
-**About send timing:**
-- Where are they located? (affects timezone conversion from MSK)
-- What's their role? (executives check email early morning, engineers might prefer afternoon)
-- What industry? (B2B tech companies have different email patterns than others)
-- When would they be most receptive? (start of week for planning, mid-week for execution, avoid Mondays/Fridays?)
-- Think: When do THEY have mental space to think about this problem?
+**About when to send:**
+- Where are they? (need to convert from MSK to their timezone)
+- What's their role? (execs check email early morning, engineers might prefer afternoon)
+- What industry? (B2B tech has different patterns than others)
+- When would they actually have headspace for this? (mid-week usually better than Monday/Friday)
+- Think: When do THEY have mental space to consider this?
 
 ---
 
 ### Phase 3: Write the Email
 
-**Structure** (POV Framework):
-- **Subject**: 2-3 words max (e.g., "Scaling support", "Knowledge gaps")
-- **Observation**: What you noticed (specific, recent, shows research)
-- **Insight**: What this typically means + the challenge it creates (non-obvious, demonstrates expertise)
-- **Soft question**: Have they considered [solution category]? (not pushy, opens conversation)
+**Structure:**
+- **Subject**: 2-3 words max (e.g., "Scaling support", "Team knowledge")
+- **What you noticed**: Something specific and recent about them (shows you did homework)
+- **What it probably means**: The non-obvious challenge this creates (shows you get it)
+- **Simple question**: Opens dialogue without being pushy
 
-**Quality bar:**
-- If you removed the name/company, would this email apply to 10 other people? → Too generic, rewrite
-- Does the insight feel like a consultant who knows their industry? → Good
-- Is the observation something they'd think "how did they notice that?" → Great
+**Quality check:**
+- Remove name/company → would this fit 10 other people? → Too generic, start over
+- Does this sound like a real person who understands their world? → Good
+- Would they think "how did they notice that about me?" → Great
 
 **Language:**
 - Write in English
@@ -846,23 +848,23 @@ After gathering data, use `sequentialthinking` to think through:
 
 ---
 
-### Phase 4: Critical Review (Use `sequentialthinking` again)
+### Phase 4: Reality Check (Use `sequentialthinking` again)
 
-Before finalizing, critique your own draft:
+Before you finalize, be brutally honest:
 
 **Ask yourself:**
-- Is this observation truly specific to THEM, or could it be anyone in their industry?
-- Is the insight something a smart person in their role would find valuable?
-- Does this sound like I understand their world, or am I guessing?
-- If I received this email, would I reply?
+- Is this observation truly about THEM, or could it be anyone in their field?
+- Would someone smart in their role actually care about this insight?
+- Does this sound like I get their world, or am I just guessing?
+- If I got this email, would I actually reply?
 
-**If the answer to any is "no" or "maybe":**
-- Revise the observation to be more specific
-- Deepen the insight by going one level further (ask "so what?" again)
-- Connect more tightly to their unique context
+**If any answer is "no" or "maybe":**
+- Make the observation more specific to them personally
+- Go one level deeper with the insight (ask "so what?" one more time)
+- Tighten the connection to their unique situation
 
-**The ultimate test:**
-"Could an automated system have written this?" → If yes, it's not good enough.
+**Final test:**
+"Could ChatGPT have written this?" → If yes, it's not good enough.
 
 ---
 
@@ -930,9 +932,9 @@ Before finalizing, critique your own draft:
 
 ❌ **НЕ ДЕЛАЙ:**
 - Копируй фразы из контекстных документов в письма
-- Используй продуктовую терминологию ("closure quality", "resolution process", и т.д.) в subject lines
-- Шаблонируй subject lines вокруг фич нашего продукта
-- Звучи как будто питчишь на основе context docs
+- Используй жаргон ("closure quality", "resolution process", "knowledge loss" и т.д.)
+- Делай subject lines про наш продукт или фичи
+- Звучи как будто питчишь что-то на основе context docs
 
 ✅ **ДЕЛАЙ:**
 - Пиши subject lines про ИХ конкретную ситуацию (их компания, роль, недавняя активность)
