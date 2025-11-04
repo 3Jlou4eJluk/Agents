@@ -184,6 +184,32 @@ class SimplePlanMCPAgent:
         self.messages_before_compression = 0
         self.messages_after_compression = 0
 
+        # Letter validation settings
+        if config:
+            validation_config = config.get('letter_validation', {})
+            self.validation_enabled = validation_config.get('enabled', True)
+            self.validation_retries = validation_config.get('validation_retries', 2)
+            self.auto_fix_enabled = validation_config.get('auto_fix_enabled', True)
+            self.word_count_min = validation_config.get('word_count_min', 75)
+            self.word_count_max = validation_config.get('word_count_max', 85)
+            self.subject_words_min = validation_config.get('subject_words_min', 2)
+            self.subject_words_max = validation_config.get('subject_words_max', 3)
+            self.cta_max_words = validation_config.get('cta_max_words', 10)
+            self.signature = validation_config.get('signature', 'Michael')
+            self.banned_phrases = validation_config.get('banned_phrases', [])
+        else:
+            # Defaults
+            self.validation_enabled = True
+            self.validation_retries = 2
+            self.auto_fix_enabled = True
+            self.word_count_min = 75
+            self.word_count_max = 85
+            self.subject_words_min = 2
+            self.subject_words_max = 3
+            self.cta_max_words = 10
+            self.signature = 'Michael'
+            self.banned_phrases = ["I'm curious", "Curious —", "I figured", "I noticed"]
+
     async def initialize(self):
         """Initialize the agent."""
         # Only initialize MCP if we own it
@@ -340,6 +366,136 @@ Be specific and preserve actionable details. Remove verbose explanations and red
             logger.warning(f"⚠️  Compression failed: {e}, keeping original context")
             return messages
 
+    def _validate_letter(self, letter_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Validate letter against quality rules.
+
+        Args:
+            letter_dict: Parsed letter dictionary
+
+        Returns:
+            {
+                'valid': bool,
+                'errors': List[str],
+                'warnings': List[str]
+            }
+        """
+        errors = []
+        warnings = []
+
+        # Skip validation if disabled or letter is rejected
+        if not self.validation_enabled or letter_dict.get('rejected', False):
+            return {'valid': True, 'errors': [], 'warnings': []}
+
+        letter = letter_dict.get('letter')
+        if not letter:
+            return {'valid': True, 'errors': [], 'warnings': []}
+
+        body = letter.get('body', '')
+        subject = letter.get('subject', '')
+
+        # 1. Word count validation (75-85 words)
+        words = body.split()
+        word_count = len(words)
+        if word_count < self.word_count_min:
+            errors.append(f"Body too short: {word_count} words (min {self.word_count_min})")
+        elif word_count > self.word_count_max:
+            errors.append(f"Body too long: {word_count} words (max {self.word_count_max})")
+
+        # 2. Signature validation (must be "Michael")
+        if self.signature not in body:
+            errors.append(f"Missing signature '{self.signature}'")
+        elif body.count(self.signature) > 1:
+            warnings.append(f"Multiple instances of '{self.signature}' found")
+
+        # 3. Subject validation (2-3 words, no "?")
+        subject_words = subject.split()
+        subject_word_count = len(subject_words)
+        if subject_word_count < self.subject_words_min or subject_word_count > self.subject_words_max:
+            errors.append(f"Subject has {subject_word_count} words (must be {self.subject_words_min}-{self.subject_words_max})")
+
+        if '?' in subject:
+            errors.append("Subject line contains question mark (not allowed)")
+
+        # 4. CTA validation (last sentence with "?", max 10 words)
+        sentences = body.split('.')
+        # Find last sentence with "?"
+        cta_sentence = None
+        for sentence in reversed(sentences):
+            if '?' in sentence:
+                cta_sentence = sentence.strip()
+                break
+
+        if cta_sentence:
+            cta_words = cta_sentence.split()
+            if len(cta_words) > self.cta_max_words:
+                errors.append(f"CTA too long: {len(cta_words)} words (max {self.cta_max_words})")
+
+            # Check CTA format (should be like "Have you looked into X before?")
+            if not cta_sentence.startswith(('Have you', 'Are you', 'Do you', 'Would you', 'Could you')):
+                warnings.append(f"CTA format doesn't match recommended pattern: '{cta_sentence[:50]}...'")
+
+            # Check for double questions
+            if body.count('?') > 1:
+                errors.append("Multiple questions found in body (CTA should be single question)")
+
+        # 5. Banned phrases
+        body_lower = body.lower()
+        for phrase in self.banned_phrases:
+            if phrase.lower() in body_lower:
+                errors.append(f"Contains banned phrase: '{phrase}'")
+
+        is_valid = len(errors) == 0
+        return {
+            'valid': is_valid,
+            'errors': errors,
+            'warnings': warnings
+        }
+
+    def _auto_fix_letter(self, letter_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Automatically fix simple issues in the letter.
+
+        Args:
+            letter_dict: Parsed letter dictionary
+
+        Returns:
+            Fixed letter dictionary
+        """
+        if not self.auto_fix_enabled or letter_dict.get('rejected', False):
+            return letter_dict
+
+        letter = letter_dict.get('letter')
+        if not letter:
+            return letter_dict
+
+        body = letter.get('body', '')
+        fixed = False
+
+        # Fix signature if wrong
+        wrong_signatures = ['Almas', 'Best', 'Regards', 'Cheers']
+        for wrong_sig in wrong_signatures:
+            # Look for signature at end of email (last 2 lines)
+            lines = body.strip().split('\n')
+            if len(lines) >= 2:
+                last_line = lines[-1].strip()
+                # If last line is a wrong signature, replace it
+                if last_line in wrong_signatures:
+                    lines[-1] = self.signature
+                    body = '\n'.join(lines)
+                    fixed = True
+                    logger.info(f"Auto-fixed signature: '{last_line}' → '{self.signature}'")
+
+        # Update body if fixed
+        if fixed:
+            letter['body'] = body
+            letter_dict['letter'] = letter
+            # Add note about auto-fix
+            notes = letter_dict.get('notes', '')
+            letter_dict['notes'] = f"{notes}\n[Auto-fixed: signature corrected to '{self.signature}']".strip()
+
+        return letter_dict
+
     async def run(self, task: str) -> Dict[str, Any]:
         """
         Execute a task using the LLM with tools.
@@ -359,6 +515,7 @@ Be specific and preserve actionable details. Remove verbose explanations and red
 
             messages = [HumanMessage(content=task)]
             iteration = 0
+            validation_attempts = 0  # Track validation retry attempts
 
             # Token tracking
             total_input_tokens = 0
@@ -406,8 +563,7 @@ Be specific and preserve actionable details. Remove verbose explanations and red
 
                 # Check if LLM wants to use tools
                 if not hasattr(response, 'tool_calls') or not response.tool_calls:
-                    # No more tools to call, we're done
-                    # Extract content from response (handle different formats)
+                    # No more tools to call, extract final content
                     final_content = response.content
 
                     # Debug: if content is empty, log the full response structure
@@ -465,6 +621,87 @@ Be specific and preserve actionable details. Remove verbose explanations and red
                                 }
                             }
 
+                    # VALIDATION: Try to parse and validate letter
+                    if self.validation_enabled:
+                        try:
+                            # Try to parse JSON from final_content
+                            import re
+                            letter_dict = None
+
+                            # Try direct JSON parse
+                            try:
+                                letter_dict = json.loads(final_content.strip())
+                            except json.JSONDecodeError:
+                                # Try to extract from markdown code block
+                                json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', final_content, re.DOTALL)
+                                if json_match:
+                                    letter_dict = json.loads(json_match.group(1))
+                                else:
+                                    # Try to find any JSON object
+                                    json_match = re.search(r'\{.*\}', final_content, re.DOTALL)
+                                    if json_match:
+                                        letter_dict = json.loads(json_match.group(0))
+
+                            # If we got a letter dict, validate it
+                            if letter_dict and isinstance(letter_dict, dict):
+                                validation_result = self._validate_letter(letter_dict)
+
+                                if not validation_result['valid']:
+                                    # Letter has validation errors
+                                    errors_text = '\n'.join(f"  - {e}" for e in validation_result['errors'])
+                                    logger.warning(f"Letter validation failed:\n{errors_text}")
+
+                                    # Check if we can retry
+                                    if validation_attempts < self.validation_retries:
+                                        validation_attempts += 1
+                                        logger.info(f"Requesting validation fix (attempt {validation_attempts}/{self.validation_retries})")
+
+                                        # Create feedback message for the model
+                                        feedback = f"""Your letter has validation errors that must be fixed:
+
+{errors_text}
+
+Please rewrite the letter to fix these issues and return ONLY the pure JSON object (no markdown, no explanations).
+
+CRITICAL REQUIREMENTS:
+- Body word count: {self.word_count_min}-{self.word_count_max} words
+- Subject: {self.subject_words_min}-{self.subject_words_max} words, NO question marks
+- Signature: Must be "{self.signature}"
+- CTA: Single question at end, max {self.cta_max_words} words
+- NO banned phrases: {', '.join(self.banned_phrases)}
+
+Return ONLY the corrected JSON."""
+
+                                        messages.append(HumanMessage(content=feedback))
+                                        # Continue the loop to get a fixed version
+                                        continue
+                                    else:
+                                        # Retries exhausted - apply auto-fix and accept with warning
+                                        logger.warning(f"Validation retries exhausted ({self.validation_retries}), applying auto-fix")
+                                        letter_dict = self._auto_fix_letter(letter_dict)
+
+                                        # Add warning to notes
+                                        notes = letter_dict.get('notes', '')
+                                        warning_text = f"\n\n[VALIDATION WARNING] Letter accepted after {self.validation_retries} retry attempts. Remaining issues:\n{errors_text}"
+                                        letter_dict['notes'] = (notes + warning_text).strip()
+
+                                        # Update final_content with fixed version
+                                        final_content = json.dumps(letter_dict, ensure_ascii=False)
+
+                                elif validation_result['warnings']:
+                                    # Letter is valid but has warnings
+                                    warnings_text = '\n'.join(f"  - {w}" for w in validation_result['warnings'])
+                                    logger.info(f"Letter validation passed with warnings:\n{warnings_text}")
+
+                                    # Add warnings to notes
+                                    notes = letter_dict.get('notes', '')
+                                    letter_dict['notes'] = f"{notes}\n\n[VALIDATION WARNINGS]\n{warnings_text}".strip()
+                                    final_content = json.dumps(letter_dict, ensure_ascii=False)
+
+                        except Exception as e:
+                            logger.warning(f"Validation failed with error: {e}, returning unvalidated result")
+
+                    # Return final result
                     return {
                         "final_result": final_content,
                         "status": "success",

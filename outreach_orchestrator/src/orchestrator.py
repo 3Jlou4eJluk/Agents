@@ -32,7 +32,9 @@ class OutreachOrchestrator:
         workers: int = 5,
         resume: bool = False,
         db_path: str = "data/progress.db",
-        config_path: Optional[str] = None
+        config_path: Optional[str] = None,
+        multi_agent_override: Optional[bool] = None,
+        start_position: int = 0
     ):
         """
         Initialize orchestrator.
@@ -52,9 +54,17 @@ class OutreachOrchestrator:
         self.num_workers = workers
         self.resume = resume
         self.db_path = db_path
+        self.start_position = max(0, int(start_position or 0))
 
         # Load configuration
         self.config = load_config(config_path)
+
+        # Apply CLI override for multi-agent mode if provided
+        if multi_agent_override is not None:
+            if 'agent_orchestration' not in self.config:
+                self.config['agent_orchestration'] = {}
+            self.config['agent_orchestration']['enabled'] = multi_agent_override
+
         prompt_mode = self.config.get('prompt_mode', 'creative')
 
         # Get model configs
@@ -73,11 +83,16 @@ class OutreachOrchestrator:
         # Show rate limiting info
         if rate_limiting_enabled:
             providers_info = []
-            for provider in ['openai', 'deepseek']:
+            for provider in ['openai', 'deepseek', 'claude']:
                 if provider in rate_limiting_cfg:
-                    rps = rate_limiting_cfg[provider].get('requests_per_second', '?')
-                    burst = rate_limiting_cfg[provider].get('burst', '?')
-                    providers_info.append(f"{provider}: {rps} req/s (burst={burst})")
+                    pconf = rate_limiting_cfg[provider]
+                    rpm = pconf.get('requests_per_minute') or pconf.get('rpm')
+                    rps = pconf.get('requests_per_second')
+                    burst = pconf.get('burst', '?')
+                    if rpm is not None:
+                        providers_info.append(f"{provider}: {rpm} req/min (burst={burst})")
+                    elif rps is not None:
+                        providers_info.append(f"{provider}: {rps} req/s (burst={burst})")
             if providers_info:
                 print(f"  - Rate limiting: ✓ ENABLED ({', '.join(providers_info)})")
         else:
@@ -115,7 +130,7 @@ class OutreachOrchestrator:
             # 2. Load tasks from CSV
             if not self.resume:
                 print(f"\n📂 Loading leads from: {self.input_csv}")
-                added = await self.task_queue.load_from_csv(self.input_csv)
+                added = await self.task_queue.load_from_csv(self.input_csv, start_position=self.start_position)
                 print(f"✓ Added {added} new tasks")
 
             # 3. Show initial stats

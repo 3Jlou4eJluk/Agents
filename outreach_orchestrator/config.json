@@ -7,20 +7,31 @@
     "openai": {
       "api_key_env": "OPENAI_API_KEY",
       "base_url": "https://api.openai.com/v1"
+    },
+    "claude": {
+      "api_key_env": "ANTHROPIC_API_KEY"
     }
   },
   "rate_limiting": {
     "enabled": true,
     "description": "Prevents 429 (Too Many Requests) errors by controlling request frequency",
     "openai": {
+      "requests_per_minute": 15,
       "requests_per_second": 0.25,
       "burst": 2,
       "note": "Very conservative: 0.25 req/s = 15 req/min. Safe for any tier."
     },
     "deepseek": {
+      "requests_per_minute": 300,
       "requests_per_second": 5,
       "burst": 10,
       "note": "DeepSeek has higher limits, used for Stage 1 classification."
+    },
+    "claude": {
+      "requests_per_minute": 60,
+      "requests_per_second": 1,
+      "burst": 5,
+      "note": "Claude API rate limits: 1 req/s = 60 req/min for standard tier."
     }
   },
   "models": {
@@ -33,15 +44,15 @@
       "description": "Stage 1: Lead classification - deterministic (no tools, JSON mode safe) - DeepSeek cheaper and faster"
     },
     "letter_generation": {
-      "provider": "openai",
-      "model": "gpt-5",
+      "provider": "claude",
+      "model": "claude-sonnet-4-5-20250929",
       "temperature": 0.8,
       "use_json_mode": false,
-      "description": "Stage 2: Letter writing - creative and insightful (uses tools, JSON mode must be disabled) - OpenAI better quality"
+      "description": "Stage 2: Letter writing - creative and insightful (uses tools, JSON mode must be disabled) - Claude Sonnet 4.5 for best quality"
     }
   },
   "mcp": {
-    "sequential-thinking": false,
+    "sequential-thinking": true,
     "bright-data": true,
     "tavily-mcp": true,
     "_note": "Set to false to disable specific MCP servers. Server configs remain in mcp_config.json."
@@ -51,12 +62,37 @@
     "max_agent_iterations": 30,
     "note": "Tier 1 OpenAI (500 req/min): 5 workers optimal. DeepSeek for Stage 1, OpenAI for Stage 2 (best quality)."
   },
+  "letter_validation": {
+    "enabled": true,
+    "validation_retries": 2,
+    "auto_fix_enabled": true,
+    "word_count_min": 75,
+    "word_count_max": 85,
+    "subject_words_min": 2,
+    "subject_words_max": 3,
+    "cta_max_words": 10,
+    "signature": "Michael",
+    "banned_phrases": [
+      "I'm curious",
+      "Curious —",
+      "I figured",
+      "I noticed"
+    ],
+    "description": "Validates letters before sending. If validation fails, agent gets feedback to retry (up to validation_retries times). After retries exhausted, accepts letter with warning in notes."
+  },
   "auto_compact": {
     "enabled": true,
     "trigger_at_messages": 15,
     "preserve_last_messages": 5,
     "summarization_model": "gpt-5-mini",
     "description": "Auto-compact compresses middle context when message count exceeds trigger. Preserves first message (system prompt) and last N messages (current context)."
+  },
+  "agent_orchestration": {
+    "enabled": true,
+    "research_agents": 2,
+    "writer_agents": 2,
+    "parallel_execution": true,
+    "description": "Multi-agent orchestration (Claude Code style). When enabled, Stage 2 uses 3-phase workflow: Research (2 agents) → Writing (2 variants) → Review (select best). Set enabled:false for legacy single-agent mode."
   },
   "prompt_mode": "creative",
   "timing": {

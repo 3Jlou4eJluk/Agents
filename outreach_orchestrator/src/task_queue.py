@@ -69,13 +69,14 @@ class TaskQueue:
             await db.execute("DELETE FROM tasks")
             await db.commit()
 
-    async def load_from_csv(self, csv_path: str) -> int:
+    async def load_from_csv(self, csv_path: str, start_position: int = 0) -> int:
         """
         Load leads from CSV file into task queue.
         Skips leads without email addresses.
 
         Args:
             csv_path: Path to CSV file with leads
+            start_position: Zero-based index in CSV to start from (skip first N rows)
 
         Returns:
             Number of new tasks added
@@ -83,12 +84,20 @@ class TaskQueue:
         added_count = 0
         skipped_no_email = 0
         skipped_exists = 0
+        skipped_by_position = 0
 
         with open(csv_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
 
             async with aiosqlite.connect(self.db_path) as db:
+                row_index = 0
                 for row in reader:
+                    # Skip first N data rows regardless of email/validity
+                    if row_index < start_position:
+                        row_index += 1
+                        skipped_by_position += 1
+                        continue
+
                     email = row.get('Email') or row.get('email')
                     linkedin_url = row.get('linkedIn') or row.get('linkedin_url') or row.get('LinkedIn')
 
@@ -121,6 +130,7 @@ class TaskQueue:
                         json.dumps(row)
                     ))
                     added_count += 1
+                    row_index += 1
 
                 await db.commit()
 
@@ -129,6 +139,8 @@ class TaskQueue:
             print(f"  ⊘ Skipped {skipped_no_email} leads (no email)")
         if skipped_exists > 0:
             print(f"  ⊘ Skipped {skipped_exists} leads (already in queue)")
+        if skipped_by_position > 0:
+            print(f"  ⤼ Skipped first {skipped_by_position} rows due to start_position")
 
         return added_count
 

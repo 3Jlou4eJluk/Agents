@@ -17,6 +17,12 @@
 #   # Custom config file
 #   ./scripts/run.sh --input data/input/leads.csv --config config.custom.json
 #
+#   # Multi-agent mode (3-phase: Research → Writing → Review)
+#   ./scripts/run.sh --input data/input/leads.csv --multi-agent
+#
+#   # Single-agent mode (legacy)
+#   ./scripts/run.sh --input data/input/leads.csv --single-agent
+#
 #   Note: By default, the database in data/progress.db is cleared on each new run.
 #   Use --resume to continue from a previous run without clearing the database.
 #
@@ -30,13 +36,16 @@
 #     --config config.json
 #
 # Options:
-#   --input, -i     Path to input CSV file with leads (required unless --resume)
-#   --output, -o    Path to output CSV file (default: data/output/results.csv)
-#   --workers, -w   Number of parallel workers (default: 5, recommended: 3-5)
-#   --context, -c   Path to context directory (default: context/)
-#   --db            Path to SQLite database (default: data/progress.db)
-#   --resume, -r    Resume from previous run
-#   --config        Path to config.json file (default: config.json in project root)
+#   --input, -i        Path to input CSV file with leads (required unless --resume)
+#   --output, -o       Path to output CSV file (default: data/output/results.csv)
+#   --workers, -w      Number of parallel workers (default: 5, recommended: 3-5)
+#   --context, -c      Path to context directory (default: context/)
+#   --db               Path to SQLite database (default: data/progress.db)
+#   --resume, -r       Resume from previous run
+#   --config           Path to config.json file (default: config.json in project root)
+#   --multi-agent      Enable multi-agent orchestration (Research → Writing → Review)
+#   --single-agent     Use legacy single-agent mode
+#   --start-position   Zero-based index in input CSV to start from (skip first N rows)
 
 # Function to print usage examples
 print_usage() {
@@ -57,15 +66,26 @@ print_usage() {
     echo "  # Custom config file"
     echo "  ./scripts/run.sh --input data/input/leads.csv --config config.custom.json"
     echo ""
+    echo "  # Multi-agent mode (Research → Writing x2 → Review)"
+    echo "  ./scripts/run.sh --input data/input/leads.csv --multi-agent"
+    echo ""
     echo "Options:"
-    echo "  --input, -i     Path to input CSV file with leads (required unless --resume)"
-    echo "  --output, -o    Path to output CSV file (default: data/output/results.csv)"
-    echo "  --workers, -w   Number of parallel workers (default: 5, recommended: 3-5)"
-    echo "  --context, -c   Path to context directory (default: context/)"
-    echo "  --db            Path to SQLite database (default: data/progress.db)"
-    echo "  --resume, -r    Resume from previous run (keeps database intact)"
-    echo "  --config        Path to config.json file (default: config.json)"
-    echo "  --help, -h      Show this help message"
+    echo "  --input, -i        Path to input CSV file with leads (required unless --resume)"
+    echo "  --output, -o       Path to output CSV file (default: data/output/results.csv)"
+    echo "  --workers, -w      Number of parallel workers (default: 5, recommended: 3-5)"
+    echo "  --context, -c      Path to context directory (default: context/)"
+    echo "  --db               Path to SQLite database (default: data/progress.db)"
+    echo "  --resume, -r       Resume from previous run (keeps database intact)"
+    echo "  --config           Path to config.json file (default: config.json)"
+    echo "  --multi-agent      Enable multi-agent mode (3-phase: Research → Writing → Review)"
+    echo "  --single-agent     Use legacy single-agent mode"
+    echo "  --start-position   Zero-based index in input CSV to start from (skip first N rows)"
+    echo "  --help, -h         Show this help message"
+    echo ""
+    echo "Multi-Agent Mode:"
+    echo "  ./scripts/run.sh --input leads.csv --multi-agent"
+    echo "  Uses 3 specialized agents: Researcher (GPT-5) → Writer (GPT-5) x2 → Reviewer (GPT-5)"
+    echo "  Higher quality, 2x variants, auto-selection. Controlled via agents/*.md files."
     echo ""
     echo "Note: By default, the database is cleared on each new run."
     echo "      Use --resume to continue from a previous run without clearing."

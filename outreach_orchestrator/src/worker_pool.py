@@ -13,6 +13,7 @@ from langchain_openai import ChatOpenAI
 from .classification import classify_single_lead
 from .agent_wrapper import SimplePlanMCPAgent, load_mcp_config_from_file, MCPClientManager
 from .config_loader import load_config, get_classification_config, get_letter_generation_config, create_llm
+from .agent_orchestrator import AgentOrchestrator
 from .logger import get_logger
 
 logger = get_logger(__name__)
@@ -23,7 +24,7 @@ PRICING = {
     'gpt-5': {
         'input': 2.50,
         'output': 10.00,
-        'cached_input': 1.25  # 50% discount
+        'cached_input': 1.25  # 50% discount (estimated, update with actual pricing)
     },
     'gpt-4o': {
         'input': 2.50,
@@ -123,6 +124,10 @@ class WorkerPool:
         # Shared MCP client manager (one for all workers, initialized once)
         self.mcp_manager = None
 
+        # Agent orchestrator (multi-agent mode)
+        self.orchestrator = None
+        self.multi_agent_enabled = self.config.get('agent_orchestration', {}).get('enabled', False)
+
         # Statistics
         self.stats = {
             'processed': 0,
@@ -190,6 +195,16 @@ class WorkerPool:
         self.mcp_manager = MCPClientManager(filtered_config)
         await self.mcp_manager.initialize()
         logger.info(f"✓ Initialized shared MCP manager with {len(await self.mcp_manager.get_tools())} tools")
+
+        # Initialize agent orchestrator if multi-agent mode enabled
+        if self.multi_agent_enabled:
+            logger.info("🎭 Initializing Agent Orchestrator (multi-agent mode)...")
+            self.orchestrator = AgentOrchestrator(
+                config=self.config,
+                context=self.context,
+                shared_mcp_manager=self.mcp_manager
+            )
+            logger.info("✓ Agent Orchestrator ready")
 
     async def close_mcp(self):
         """Close shared MCP manager (call once after all processing)."""
@@ -321,7 +336,11 @@ class WorkerPool:
 
     async def _stage2_generate_letter(self, task: Dict, context: Dict) -> Dict:
         """
-        Stage 2: Generate letter using plan_mcp_agent.
+        Stage 2: Generate letter.
+
+        Routes to either:
+        - Multi-agent orchestrator (if agent_orchestration.enabled)
+        - Single agent (legacy mode)
 
         Args:
             task: Task with lead data
@@ -337,6 +356,115 @@ class WorkerPool:
                 'letter': None
             }
 
+        lead_data = task['lead_data']
+        linkedin_url = task['linkedin_url']
+
+        # Route to orchestrator if multi-agent mode enabled
+        if self.multi_agent_enabled and self.orchestrator:
+            return await self._stage2_multi_agent(task, context)
+
+        # Otherwise use legacy single-agent mode
+        return await self._stage2_single_agent(task, context)
+
+    async def _stage2_multi_agent(self, task: Dict, context: Dict) -> Dict:
+        """
+        Stage 2: Generate letter using multi-agent orchestrator.
+
+        Args:
+            task: Task with lead data
+            context: Agent context
+
+        Returns:
+            Letter generation result
+        """
+        lead_data = task['lead_data']
+
+        # Prepare lead data for orchestrator
+        lead_info = {
+            'email': task['email'],
+            'name': lead_data.get('name') or f"{lead_data.get('First Name', '')} {lead_data.get('Last Name', '')}".strip(),
+            'company': lead_data.get('company') or lead_data.get('companyName'),
+            'job_title': lead_data.get('job_title') or lead_data.get('jobTitle'),
+            'linkedin_url': task.get('linkedin_url')
+        }
+
+        # Run orchestrator
+        orch_result = await self.orchestrator.process_lead(lead_info, worker_id=task.get('worker_id', 'unknown'))
+
+        # Normalize to canonical stage2_result format expected by ResultWriter:
+        # {
+        #   'rejected': bool,
+        #   'reason': str|None,
+        #   'letter': { 'subject', 'body', 'send_time_msk', ... } | None,
+        #   'relevance_assessment': str|None,
+        #   'notes': str|None
+        # }
+        # Orchestrator returns review_results with selected_letter and may set rejected flags at top level.
+        if not isinstance(orch_result, dict):
+            return {
+                'rejected': True,
+                'reason': 'Invalid orchestrator result',
+                'letter': None,
+                'relevance_assessment': 'ERROR',
+                'notes': ''
+            }
+
+        if orch_result.get('status') == 'error':
+            return {
+                'rejected': True,
+                'reason': orch_result.get('rejection_reason') or orch_result.get('error', 'Orchestrator error'),
+                'letter': None,
+                'relevance_assessment': 'ERROR',
+                'notes': ''
+            }
+
+        if orch_result.get('rejected'):
+            return {
+                'rejected': True,
+                'reason': orch_result.get('rejection_reason', 'Rejected by orchestrator'),
+                'letter': None,
+                'relevance_assessment': 'NOT RELEVANT',
+                'notes': ''
+            }
+
+        review = orch_result.get('review_results', {}) or {}
+        letter = review.get('selected_letter') or orch_result.get('stage2_result')
+
+        # Try to propagate optional fields from the selected variant, if available
+        relevance_assessment = None
+        notes = review.get('selection_reasoning')
+
+        try:
+            selected_id = review.get('selected_variant_id') or review.get('selected_variant')
+            variants = orch_result.get('variants') or []
+            selected_variant = next((v for v in variants if v.get('variant_id') == selected_id), None)
+            if isinstance(selected_variant, dict):
+                relevance_assessment = selected_variant.get('relevance_assessment')
+                # If writer returned notes at top level, append to notes
+                if selected_variant.get('notes'):
+                    notes = (notes + f"\n\nWriter notes: {selected_variant.get('notes')}") if notes else selected_variant.get('notes')
+        except Exception:
+            pass
+
+        return {
+            'rejected': False,
+            'reason': None,
+            'letter': letter if isinstance(letter, dict) else None,
+            'relevance_assessment': relevance_assessment,
+            'notes': notes
+        }
+
+    async def _stage2_single_agent(self, task: Dict, context: Dict) -> Dict:
+        """
+        Stage 2: Generate letter using single plan_mcp_agent (legacy mode).
+
+        Args:
+            task: Task with lead data
+            context: Agent context (GTM, guides, instruction)
+
+        Returns:
+            Letter generation result
+        """
         lead_data = task['lead_data']
         linkedin_url = task['linkedin_url']
 
@@ -357,10 +485,7 @@ class WorkerPool:
         )
 
         try:
-            # Initialize agent (won't re-initialize MCP)
-            await agent.initialize()
-
-            # Run agent with the task
+            # Run agent with the task (agent handles its own initialization)
             result = await agent.run(task_text)
 
             # Extract result from agent output
@@ -663,6 +788,31 @@ Read what you wrote and be honest:
 - Send time: think about timezone/role/receptiveness, specify in MSK, explain reasoning in notes
 - Assessment can be in Russian
 
+---
+
+## CRITICAL VALIDATION
+
+**Before returning your final JSON, verify these requirements:**
+
+1. **Word count**: Body must be 75-85 words (count them!)
+2. **Signature**: Must be "Michael" (NOT "Almas" or other names)
+3. **Subject line**:
+   - Exactly 2-3 words
+   - NO question marks (?)
+4. **CTA (Call-to-Action)**:
+   - Maximum 10 words
+   - Format: "Have you looked into X before?" or similar
+   - Only ONE question in entire email body
+5. **Banned phrases** - DO NOT use:
+   - "I'm curious"
+   - "Curious —"
+   - "I figured"
+   - "I noticed"
+
+**If ANY validation fails → STOP and FIX before returning JSON.**
+
+---
+
 ## Output Format
 
 **CRITICAL: Your FINAL response must be ONLY pure JSON - no markdown, no explanations, no extra text.**
@@ -875,6 +1025,31 @@ Before you finalize, be brutally honest:
 - If data gathering fails after retries, reject the lead with a clear reason
 - Assessment and send time in Russian is fine
 - **Send time**: Think about their timezone, role, and when they're most receptive. Provide specific day + time in MSK (e.g., "Wednesday, 10:00 MSK" for US East Coast morning). Explain your reasoning in notes.
+
+---
+
+## CRITICAL VALIDATION
+
+**Before returning your final JSON, verify these requirements:**
+
+1. **Word count**: Body must be 75-85 words (count them!)
+2. **Signature**: Must be "Michael" (NOT "Almas" or other names)
+3. **Subject line**:
+   - Exactly 2-3 words
+   - NO question marks (?)
+4. **CTA (Call-to-Action)**:
+   - Maximum 10 words
+   - Format: "Have you looked into X before?" or similar
+   - Only ONE question in entire email body
+5. **Banned phrases** - DO NOT use:
+   - "I'm curious"
+   - "Curious —"
+   - "I figured"
+   - "I noticed"
+
+**If ANY validation fails → STOP and FIX before returning JSON.**
+
+---
 
 ## Output Format
 

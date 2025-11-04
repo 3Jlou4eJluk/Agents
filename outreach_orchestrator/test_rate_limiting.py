@@ -59,12 +59,16 @@ async def test_rate_limiting():
         print(f"\n✓ All requests succeeded (no 429 errors!)")
 
     # Calculate expected time
-    rate_limit = config.get('rate_limiting', {}).get(
-        model_config.get('provider', 'openai'), {}
-    ).get('requests_per_second', 10)
+    provider_limits = config.get('rate_limiting', {}).get(model_config.get('provider', 'openai'), {})
+    rpm = provider_limits.get('requests_per_minute') or provider_limits.get('rpm')
+    rps = provider_limits.get('requests_per_second')
+    if rpm:
+        rate_limit_rps = float(rpm) / 60.0
+    else:
+        rate_limit_rps = float(rps or 10)
 
-    expected_min_time = 10 / rate_limit if rate_limit else 0
-    print(f"\nExpected minimum time: {expected_min_time:.2f}s (at {rate_limit} req/s)")
+    expected_min_time = 10 / rate_limit_rps if rate_limit_rps else 0
+    print(f"\nExpected minimum time: {expected_min_time:.2f}s (at {rate_limit_rps:.3f} req/s)")
     print(f"Actual time: {elapsed:.2f}s")
 
     if elapsed >= expected_min_time * 0.8:  # 80% threshold

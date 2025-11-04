@@ -86,6 +86,28 @@ Note:
         help='Path to config.json file (default: config.json in project root)'
     )
 
+    parser.add_argument(
+        '--multi-agent',
+        action='store_true',
+        help='Enable multi-agent orchestration (3-phase: Research → Writing → Review). Overrides config.json setting.'
+    )
+
+    parser.add_argument(
+        '--single-agent',
+        action='store_true',
+        help='Use legacy single-agent mode. Overrides config.json setting.'
+    )
+
+    # Start position to skip first N rows from input CSV
+    parser.add_argument(
+        '--start-position',
+        '--start_position',
+        dest='start_position',
+        type=int,
+        default=0,
+        help='Zero-based index in input CSV to start from (skip first N rows)'
+    )
+
     args = parser.parse_args()
 
     # Validate arguments
@@ -106,6 +128,15 @@ Note:
         print(f"  3. Customize guides/ if needed")
         sys.exit(1)
 
+    # Determine agent mode override
+    agent_mode_override = None
+    if args.multi_agent:
+        agent_mode_override = True
+        print("🎭 Multi-agent mode enabled (CLI override)")
+    elif args.single_agent:
+        agent_mode_override = False
+        print("🤖 Single-agent mode enabled (CLI override)")
+
     # Create orchestrator
     orchestrator = OutreachOrchestrator(
         input_csv=args.input or '',
@@ -114,7 +145,9 @@ Note:
         workers=args.workers,
         resume=args.resume,
         db_path=args.db,
-        config_path=args.config
+        config_path=args.config,
+        multi_agent_override=agent_mode_override,
+        start_position=max(0, args.start_position or 0)
     )
 
     # Run
