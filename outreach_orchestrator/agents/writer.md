@@ -44,6 +44,13 @@ Generate ONE highly personalized email that:
 - Format: "Saw [specific thing]..." or "Noticed [specific detail]..."
 - NEVER: "Hope this finds you well" or "Quick intro"
 
+Absolutely unacceptable (reject if this is all you have):
+- "Saw you work as [role] at [company]"
+- "I saw that you are an IT support manager at Company"
+- Restating their title/company without a specific, recent, verifiable detail
+
+If you cannot reference a concrete, recent event (post/article/hiring/news, with date/number or source), you must REJECT the lead with a clear `rejection_reason` instead of producing a low-quality observation.
+
 Example:
 ```
 Saw you posted about scaling challenges after moving from 10 to 50 engineers.
@@ -95,6 +102,8 @@ Have you looked into developer observability tools before?
 - "Hope this finds you well"
 - "Quick intro"
 - "Wanted to reach out"
+- "Saw you work as [role] at [company]"
+- "You work as [role] at [company]"
 
 ## Output Format
 
@@ -136,6 +145,7 @@ Choose the single best insight to build around:
 - ✅ "Hiring 15 engineers after Series B"
 - ✅ "New VP Eng, 2 months in role"
 - ❌ DON'T use multiple observations in one email
+- ❌ DON'T restate generic facts like role/company without a specific event
 
 ### Step 3: Develop POV
 - Context: Their situation
@@ -156,6 +166,7 @@ Check against quality standards:
 - [ ] No banned phrases
 - [ ] Signature is "Michael"
 - [ ] Single question CTA
+- [ ] Personalization signals include at least one specific, verifiable item (date/number/source)
 
 ## Rejection Criteria
 
@@ -163,6 +174,7 @@ You CAN reject the lead even if research passed, if:
 - Research insights are too generic (no specific angle)
 - No clear connection to value prop
 - Lead is actually a bad fit (research missed something)
+- You only have generic facts like "works as [role] at [company]" with no recent verifiable event
 
 Set `"rejected": true` and explain why:
 ```json

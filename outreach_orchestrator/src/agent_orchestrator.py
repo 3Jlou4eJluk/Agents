@@ -272,9 +272,97 @@ class AgentOrchestrator:
             else:
                 parsed = self._parse_json_result(result)
                 parsed['variant_id'] = i + 1
-                variants.append(parsed)
+                # Heuristic validation: flag generic/placeholder observations
+                validated = self._validate_personalization(parsed, lead_data)
+                if not validated['ok']:
+                    logger.info(
+                        f"[{worker_id}] ✗ Variant {i+1} rejected: {validated['reason']}"
+                    )
+                    variants.append({
+                        'rejected': True,
+                        'rejection_reason': validated['reason'],
+                        'variant_id': i + 1
+                    })
+                else:
+                    variants.append(parsed)
 
         return variants
+
+    def _validate_personalization(self, variant: Dict[str, Any], lead_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Heuristically validate that personalization is specific and non-generic.
+
+        Rules (fail if any):
+        - Missing personalization_signals
+        - Signals contain placeholders or ultra-generic facts (e.g., "works as X at Y")
+        - Signals too short (< 6 words) and without specificity cues (digits/dates/verbs like posted/hiring/raised)
+        - Contains obvious placeholders like "company", "companyName", "jobTitle"
+
+        Returns:
+            { ok: bool, reason: str }
+        """
+        try:
+            signals = []
+            # Writer might put signals either at top-level or inside letter
+            if isinstance(variant, dict):
+                signals = variant.get('personalization_signals') or []
+                if not signals and isinstance(variant.get('letter'), dict):
+                    signals = variant['letter'].get('personalization_signals') or []
+
+            if not signals:
+                return { 'ok': False, 'reason': 'Missing personalization_signals (must reference a specific, verifiable observation)' }
+
+            # Prepare basic context words to detect tautologies
+            role = (lead_data.get('job_title') or lead_data.get('jobTitle') or '').lower()
+            company = (lead_data.get('company') or lead_data.get('companyName') or '').lower()
+            person = (lead_data.get('name') or '').lower()
+
+            # Disallowed generic patterns
+            disallowed_substrings = [
+                'you work as', 'you are working as', 'работаешь', 'ты работаешь',
+                'works as', 'working as', 'it support manager',
+                'at company', 'в компании company', 'company company',
+                'job title', 'companyname', 'linkedin profile', 'generic observation'
+            ]
+
+            specificity_markers = [
+                'posted', 'post', 'commented', 'article', 'hiring', 'opening', 'open roles', 'raised', 'series',
+                'joined', 'months', 'years', 'week', 'weeks', 'days', 'yesterday', 'today', 'announcement', 'launch',
+                'funding', 'seed', 'series a', 'series b', 'series c'
+            ]
+
+            def looks_generic(text: str) -> bool:
+                t = (text or '').strip().lower()
+                if not t:
+                    return True
+                # Placeholder tokens or boilerplate
+                if any(s in t for s in disallowed_substrings):
+                    return True
+                if 'company' == t or 'job title' == t:
+                    return True
+                # Pure tautology of role/company
+                if company and company in t and ('work' in t or 'работа' in t) and (role and role in t):
+                    return True
+                # Very short and no specificity cues
+                word_count = len(t.split())
+                has_digit = any(ch.isdigit() for ch in t)
+                has_marker = any(m in t for m in specificity_markers)
+                if word_count < 6 and not has_digit and not has_marker:
+                    return True
+                return False
+
+            bad = [s for s in signals if looks_generic(s)]
+            if bad:
+                example = bad[0]
+                return {
+                    'ok': False,
+                    'reason': f"Generic/placeholder observation found: '{example[:80]}'"
+                }
+
+            return { 'ok': True, 'reason': '' }
+        except Exception as e:
+            # Fail closed to be safe
+            return { 'ok': False, 'reason': f'Personalization validation error: {str(e)}' }
 
     async def _phase_review(
         self,

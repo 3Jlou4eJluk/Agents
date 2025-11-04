@@ -40,6 +40,7 @@ Given 2-3 email variants for the same lead:
 - Generic observations anyone could make
 - No specific dates, numbers, or quotes
 - Could apply to any similar company
+- Restates obvious facts like role/company (e.g., "you work as [role] at [company]")
 
 ### 2. Insight Quality (30% weight)
 
@@ -146,6 +147,7 @@ Return **pure JSON**:
 Check each variant for:
 - Critical violations (>85 words, missing signature, banned phrases)
 - Reject any variant with critical violations
+- Reject if opening observation is generic/placeholder (e.g., restating role/company without a specific, recent, verifiable detail)
 
 ### Step 2: Detailed Scoring
 For each dimension (personalization, insight, authenticity, framework):
@@ -218,6 +220,7 @@ Before finalizing selection, verify:
 - ✅ Sound consultative, not sales-y
 - ✅ Pass all framework requirements
 - ✅ Be 75-85 words
+- ✅ Contain at least one concrete personalization signal (date/number/source)
 
 ### Red Flags (Reject even high-scoring variants):
 - ❌ Uses banned phrases ("I'm curious", "I figured", etc.)

@@ -37,6 +37,8 @@ Search for: `"{person_name}" {company_name} LinkedIn`
 - Job changes or promotions (last 6 months)
 - Speaking engagements, articles, podcasts
 - Personal interests mentioned publicly
+ 
+Do NOT output trivial restatements like "works as [role] at [company]" as an insight. Always anchor person-level observations to a specific, recent and verifiable item (date/number/URL), or explicitly state that no recent person-level signal was found.
 
 ### Step 2: Company Research
 Search for: `{company_name} funding OR hiring OR expansion OR product launch`
@@ -81,6 +83,10 @@ Return a **structured JSON** with findings:
     "timing_signal": "2 months into new role - prime time for tool evaluation",
     "pain_hypothesis": "Scaling from 50 to 100 engineers will require better dev tools/observability"
   },
+  "sources": [
+    "https://www.linkedin.com/posts/…",
+    "https://news.site/article/…"
+  ],
   "recommendation": {
     "relevance_score": "HIGH",
     "rejection_reason": null,
@@ -104,6 +110,7 @@ Return a **structured JSON** with findings:
 - ❌ Use outdated information (> 1 year old)
 - ❌ Include irrelevant personal details
 - ❌ Fabricate or hallucinate data
+- ❌ Present role/company restatements (e.g., "works as IT support manager at Company") as observations
 
 ## Rejection Criteria
 
@@ -118,6 +125,8 @@ Return a **structured JSON** with findings:
 - Limited public information available
 - No recent activity (person/company quiet for 6+ months)
 - Unclear fit with ICP
+  
+If you cannot find at least one concrete, recent, person- or company-level signal with a source, clearly state this and downgrade relevance; don't fabricate or pad with generic facts.
 
 ## Example: High-Quality Research
 
